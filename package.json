@@ -1,0 +1,37 @@
+{
+  "name": "backbone.admin",
+  "description": "CRUD Admin plugin for Backbone (heavy use of Backbone.Marionette)",
+  "keywords": [ "admin", "crud", "backbone", "marionette" ],
+  "version": "0.0.1",
+  "homepage": "https://github.com/prevole/backbone.admin",
+  "author": "Laurent Prévost (prevole) <prevole@prevole.ch>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prevole/backbone.admin"
+  },
+  "engines": {
+    "node": "0.8.x"
+  },
+  "scripts": {
+    "test": "grunt jasmine",
+    "start": "grunt jasmine-server"
+  },
+  "devDependencies": {
+    "grunt": "~0.3.16",
+    "grunt-rigger": "0.3.0",
+    "grunt-contrib-coffee": "0.3.2",
+    "grunt-contrib-clean": "0.3.0",
+    "grunt-contrib-copy": "0.3.2",
+    "grunt-sass": "0.2.4",
+    "grunt-haml": "0.2.0",
+    "grunt-coffeelint": "0.0.3",
+    "grunt-docker": "0.0.3",
+    "grunt-jasmine-runner": "0.6.0"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://raw.github.com/prevole/backbone.admin/master/LICENSE.txt"
+    }
+  ]
+}
