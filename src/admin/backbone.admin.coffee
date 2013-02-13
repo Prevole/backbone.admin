@@ -36,9 +36,13 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
   authorizator = null
 
 
-  #= backbone.admin.utils.coffee
-  # backbone.dg.templateregistry.coffee
-
+  # backbone.admin.utils.coffee
+  #= backbone.admin.authorizator.coffee
+  #= backbone.admin.mainregion.coffee
+  #= backbone.admin.maincontroller.coffee
+  #= backbone.admin.formview.coffee
+  #= backbone.admin.modulecontroller.coffee
+  #= backbone.admin.navigationview.coffee
 
   ###
   Defaults i18nKeys used in the translations if `i18n-js` is used.
@@ -161,25 +165,6 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
 #
 #      @fetch() unless currentPage == @current.page
 
-# ----------------------------------------------------------------------------------------------------------------------
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-
-# ----------------------------------------------------------------------------------------------------------------------
 
   Admin.instanciateModule = (options) ->
     if applicationStarted
@@ -219,12 +204,12 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
     if options.authorizator
       authorizator = new options.authorizator()
     else
-      authorizator = new Ajadmin.Authorizator()
+      authorizator = new Admin.Authorizator()
 
 # ----------------------------------------------------------------------------------------------------------------------
 
   Admin.start = (options) ->
-    Ajadmin.init() unless initialized
+    Admin.init() unless initialized
 
     vent = new Marionette.EventBinder()
 
@@ -236,7 +221,7 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
 
     # Check if a main region class should be used, otherwise use the default one
     if options.mainRegion is undefined
-      mainRegion = Ajadmin.MainRegion
+      mainRegion = Admin.MainRegion
     else
       mainRegion = options.mainRegion
 
@@ -244,7 +229,7 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
     if options.navigationView?
       navigationViewClass = options.navigationView
     else
-      navigationViewClass = Ajadmin.NavigationView
+      navigationViewClass = Admin.NavigationView
 
     CRUDApplication = new Marionette.Application()
 
@@ -268,9 +253,10 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
 # ----------------------------------------------------------------------------------------------------------------------
 
   Admin.can = (action, subject) ->
-    authorizator.can(action, subject)
+    authorizator.can action, subject
 
-# ----------------------------------------------------------------------------------------------------------------------
+  Admin.cannot = (action, subject) ->
+    authorizator.cannot action, subject
 
   return Admin
 )(Backbone, Backbone.Marionette, _, $ || window.jQuery || window.Zepto || window.ender)

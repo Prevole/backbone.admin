@@ -16,7 +16,7 @@ module.exports = function(grunt) {
         meta: {
             version: '<%= pkg.version %>',
             banner_main:
-                ' * Backbone.Dg v<%= meta.version %>\n' +
+                ' * Backbone.Admin v<%= meta.version %>\n' +
                 ' * Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author %>\n' +
                 ' * Distributed under MIT license\n' +
                 ' * <%= pkg.homepage %>\n',
@@ -35,7 +35,7 @@ module.exports = function(grunt) {
 
         rig: {
             build: {
-                src: ['src/dg/backbone.admin.coffee'],
+                src: ['src/admin/backbone.admin.coffee'],
                 dest: 'working/backbone.admin.coffee'
             },
             demo: {
@@ -46,7 +46,7 @@ module.exports = function(grunt) {
 
         coffeelint: {
             build: {
-                files: ["src/dg/*.coffee"],
+                files: ["src/admin/*.coffee"],
                 options: {
                     max_line_length: {
                         value: 120
@@ -69,7 +69,7 @@ module.exports = function(grunt) {
                     bare: true
                 },
                 files: {
-                    'dist/std/backbone.dg.js': ['working/backbone.admin.coffee']
+                    'dist/std/backbone.admin.js': ['working/backbone.admin.coffee']
                 }
             },
             demo: {
@@ -143,7 +143,7 @@ module.exports = function(grunt) {
                 },
                 files: {
                     "demo/js/": ["vendor/javascripts/*.js"],
-                    "demo/js/backbone.dg.js": ["dist/std/backbone.admin.js"],
+                    "demo/js/backbone.admin.js": ["dist/std/backbone.admin.js"],
                     "demo/images/": ["src/demo/images/*.png"],
                     "demo/bootstrap/": ["src/demo/bootstrap/**"]
                 }

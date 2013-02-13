@@ -1,1 +1,11 @@
-.idea
+*.swp
+node_modules
+npm-debug.log
+.DS_Store
+doc
+_SpecRunner.html
+wiki
+.idea/*
+working
+spec/javascripts
+
