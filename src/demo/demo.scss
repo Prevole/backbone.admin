@@ -1,0 +1,57 @@
+.dgGrid {
+  .pagination > ul > li > a {
+    line-height: 24px;
+    padding: 0 7px;
+  }
+
+  .dgLoading {
+    margin: 5px;
+    padding: 50px;
+  }
+
+  .dgTable {
+    margin: 5px 0px;
+  }
+
+  table {
+    th {
+      &.sorting {
+        background: url("images/sort-inactive.png") no-repeat scroll right center transparent;
+        cursor: pointer;
+      }
+
+      &.sorting-asc { background: url("images/sort-asc.png") no-repeat scroll right center transparent; }
+      &.sorting-desc { background: url("images/sort-desc.png") no-repeat scroll right center transparent; }
+    }
+
+    tr {
+      &:nth-child(odd) {
+        td.sorting-asc { background: #87cefa !important; }
+        td.sorting-desc { background: #90ee90 !important; }
+
+        &:hover {
+          td.sorting-asc { background: #76bde9 !important; }
+          td.sorting-desc { background: #80dd80 !important; }
+        }
+      }
+
+      &:nth-child(even) {
+        td.sorting-asc { background: #add8e6 !important; }
+        td.sorting-desc { background: #20b2aa !important; }
+
+        &:hover {
+          td.sorting-asc { background: #9cc7d5 !important; }
+          td.sorting-desc { background: #10a199 !important; }
+        }
+      }
+    }
+  }
+}
+
+.card {
+  background-color: #FFFFEE;
+  border: solid black 1px;
+  width: 350px;
+  margin: 5px;
+  padding: 10px;
+}

@@ -1,0 +1,38 @@
+.dgGrid .pagination > ul > li > a {
+  line-height: 24px;
+  padding: 0 7px; }
+.dgGrid .dgLoading {
+  margin: 5px;
+  padding: 50px; }
+.dgGrid .dgTable {
+  margin: 5px 0px; }
+.dgGrid table th.sorting {
+  background: url("images/sort-inactive.png") no-repeat scroll right center transparent;
+  cursor: pointer; }
+.dgGrid table th.sorting-asc {
+  background: url("images/sort-asc.png") no-repeat scroll right center transparent; }
+.dgGrid table th.sorting-desc {
+  background: url("images/sort-desc.png") no-repeat scroll right center transparent; }
+.dgGrid table tr:nth-child(odd) td.sorting-asc {
+  background: #87cefa !important; }
+.dgGrid table tr:nth-child(odd) td.sorting-desc {
+  background: #90ee90 !important; }
+.dgGrid table tr:nth-child(odd):hover td.sorting-asc {
+  background: #76bde9 !important; }
+.dgGrid table tr:nth-child(odd):hover td.sorting-desc {
+  background: #80dd80 !important; }
+.dgGrid table tr:nth-child(even) td.sorting-asc {
+  background: #add8e6 !important; }
+.dgGrid table tr:nth-child(even) td.sorting-desc {
+  background: #20b2aa !important; }
+.dgGrid table tr:nth-child(even):hover td.sorting-asc {
+  background: #9cc7d5 !important; }
+.dgGrid table tr:nth-child(even):hover td.sorting-desc {
+  background: #10a199 !important; }
+
+.card {
+  background-color: #FFFFEE;
+  border: solid black 1px;
+  width: 350px;
+  margin: 5px;
+  padding: 10px; }
