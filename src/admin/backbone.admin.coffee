@@ -211,8 +211,6 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
   Admin.start = (options) ->
     Admin.init() unless initialized
 
-    vent = new Marionette.EventBinder()
-
     applicationStarted = true
 
     # Ensure the options are present
@@ -243,7 +241,7 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
       navigationView = new navigationViewClass()
 #      mainController = new MainController()
 
-      vent.bindTo navigationView, "navigate:switchModule", mainController.switchModule, mainController
+      navigationView.listenTo navigationView, "navigate:switchModule", mainController.switchModule
 
       @addRegions
         mainRegion: mainRegion

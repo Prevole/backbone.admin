@@ -1,4 +1,4 @@
-var DataModel, data, dataCollection, models,
+var DataModel, MainRegion, NavigationView, data, dataCollection, models,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -221,3 +221,71 @@ dataCollection = (function(_super) {
   return _Class;
 
 })(Backbone.Collection);
+
+NavigationView = (function(_super) {
+
+  __extends(_Class, _super);
+
+  function _Class() {
+    return _Class.__super__.constructor.apply(this, arguments);
+  }
+
+  _Class.prototype.el = ".menu";
+
+  _Class.prototype.events = {
+    "click a": "handleClick"
+  };
+
+  _Class.prototype.handleClick = function(event) {
+    event.preventDefault();
+    return this.switchModule($(event.target).attr("data-module"));
+  };
+
+  return _Class;
+
+})(Admin.NavigationView);
+
+MainRegion = (function(_super) {
+
+  __extends(_Class, _super);
+
+  function _Class() {
+    return _Class.__super__.constructor.apply(this, arguments);
+  }
+
+  _Class.prototype.el = ".content";
+
+  _Class.prototype.open = function(view) {
+    var _this = this;
+    this.$el.html(view.el);
+    return this.$el.show("slide", {
+      direction: "left"
+    }, 1000, function() {
+      return view.trigger("transition:open");
+    });
+  };
+
+  _Class.prototype.show = function(view) {
+    var _this = this;
+    if (this.$el) {
+      return $(this.el).hide("slide", {
+        direction: "left"
+      }, 1000, function() {
+        view.trigger("transition:show");
+        return _Class.__super__.show.call(_this, view);
+      });
+    } else {
+      return _Class.__super__.show.call(this, view);
+    }
+  };
+
+  return _Class;
+
+})(Backbone.Marionette.Region);
+
+$(document).ready(function() {
+  return Admin.start({
+    navigationView: NavigationView,
+    mainRegion: MainRegion
+  });
+});

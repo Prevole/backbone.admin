@@ -133,6 +133,7 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       if (changeUrl == null) {
         changeUrl = true;
       }
+      alert(moduleName);
       module = retrieveModule.call(this, moduleName);
       if (changeUrl) {
         module.getRouter().changeUrl("grid");
@@ -589,11 +590,10 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     }
   };
   Admin.start = function(options) {
-    var CRUDApplication, mainRegion, navigationViewClass, vent;
+    var CRUDApplication, mainRegion, navigationViewClass;
     if (!initialized) {
       Admin.init();
     }
-    vent = new Marionette.EventBinder();
     applicationStarted = true;
     if (options === void 0) {
       throw new Error("No option defined when some are required.");
@@ -620,7 +620,7 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     CRUDApplication.addInitializer(function() {
       var navigationView;
       navigationView = new navigationViewClass();
-      vent.bindTo(navigationView, "navigate:switchModule", mainController.switchModule, mainController);
+      navigationView.listenTo(navigationView, "navigate:switchModule", mainController.switchModule);
       return this.addRegions({
         mainRegion: mainRegion
       });

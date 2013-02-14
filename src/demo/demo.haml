@@ -4,7 +4,7 @@
   %head
     %title= "Backbone Admin Demo"
 
-    %meta{"http-equiv" => "Content-Type", content: "text/html; charset=utf-8"}
+    %meta{http-equiv: "Content-Type", content: "text/html; charset=utf-8"}
 
     %link{href: "bootstrap/css/bootstrap.min.css", media: "all", rel: "stylesheet", type: "text/css"}
     %link{href: "bootstrap/css/bootstrap-responsive.min.css", media: "all", rel: "stylesheet", type: "text/css"}
@@ -27,6 +27,11 @@
   %body
     .container
       %h1= "Backbone Admin Demo"
+
+      %nav.menu
+        %a{href: "books", data-module: "books"}= "Books"
+
+      .content
 
       -#%p.lead= "Backbone Datagrid is a plugin to organize present data with some controls like sorting, pagging, filtering. "
       -#  %a{link: "http://backbonejs.org", target: "_blank"}= "Backbone"
