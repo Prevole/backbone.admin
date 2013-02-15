@@ -20,8 +20,10 @@ MainController = class
     alert moduleName
     module = retrieveModule.call @, moduleName
 
-    if changeUrl
-      module.getRouter().changeUrl("grid")
+#    History.navigate "/books"
+
+#    if changeUrl
+#      module.getRouter().changeUrl("grid")
 
 #      if module.collection.length == 0
 #        module.collection.fetch()

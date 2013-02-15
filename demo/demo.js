@@ -1,4 +1,4 @@
-var DataModel, MainRegion, NavigationView, data, dataCollection, models,
+var CreateView, DataModel, EditView, MainRegion, NavigationView, data, dataCollection, models,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -282,6 +282,60 @@ MainRegion = (function(_super) {
   return _Class;
 
 })(Backbone.Marionette.Region);
+
+CreateView = (function(_super) {
+
+  __extends(_Class, _super);
+
+  function _Class() {
+    return _Class.__super__.constructor.apply(this, arguments);
+  }
+
+  _Class.prototype.ui = {
+    name: "#books"
+  };
+
+  _Class.prototype.getAttributes = function() {
+    return {
+      name: this.ui.name.val()
+    };
+  };
+
+  return _Class;
+
+})(Admin.FormView);
+
+EditView = (function(_super) {
+
+  __extends(_Class, _super);
+
+  function _Class() {
+    return _Class.__super__.constructor.apply(this, arguments);
+  }
+
+  _Class.prototype.ui = {
+    name: "#books"
+  };
+
+  _Class.prototype.onRender = function() {
+    return this.ui.name.val(this.model.get("name"));
+  };
+
+  _Class.prototype.getAttributes = function() {
+    return {
+      name: this.ui.name.val()
+    };
+  };
+
+  return _Class;
+
+})(Admin.FormView);
+
+Admin.instanciateModule({
+  moduleName: "books",
+  createView: CreateView,
+  editView: EditView
+});
 
 $(document).ready(function() {
   return Admin.start({

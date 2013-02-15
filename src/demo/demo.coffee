@@ -110,6 +110,7 @@ MainRegion = class extends Backbone.Marionette.Region
     else
       super view
 
+#= modules/books.coffee
 
 $(document).ready ->
   Admin.start(

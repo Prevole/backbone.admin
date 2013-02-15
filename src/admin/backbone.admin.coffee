@@ -172,25 +172,25 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
     else
       module = new ModuleController(options)
 
-      Router = Marionette.AppRouter.extend
-        controller: module
-        appRoutes:
-          module.getRoutes()
-
-        initialize: ->
-          @on "changeUrl", (type) ->
-            @changeUrl type
-
-        changeUrl: (type, options) ->
-          route = @controller.getRoute(type)
-
-          if options
-            for key, value of options
-              route = route.replace(":#{key}", value)
-
-          @navigate route
-
-      module.setRouter new Router()
+#      Router = Marionette.AppRouter.extend
+#        controller: module
+#        appRoutes:
+#          module.getRoutes()
+#
+#        initialize: ->
+#          @on "changeUrl", (type) ->
+#            @changeUrl type
+#
+#        changeUrl: (type, options) ->
+#          route = @controller.getRoute(type)
+#
+#          if options
+#            for key, value of options
+#              route = route.replace(":#{key}", value)
+#
+#          @navigate route
+#
+#      module.setRouter new Router()
 
       mainController.registerModule module
 
@@ -241,7 +241,7 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
       navigationView = new navigationViewClass()
 #      mainController = new MainController()
 
-      navigationView.listenTo navigationView, "navigate:switchModule", mainController.switchModule
+      navigationView.on "navigate:switchModule", mainController.switchModule, mainController
 
       @addRegions
         mainRegion: mainRegion

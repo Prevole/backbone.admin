@@ -18,7 +18,7 @@ ModuleController = class
     @pagesBasePath    = if options.pagesBasePath? then options.pagesBasePath.replace(/\/$/, "") else null
     @templatePath     = if @pagesBasePath then "#{@pagesBasePath}/#{@moduleBaseRoute}" else @moduleBaseRoute
 
-    @vent = new Marionette.EventBinder
+#    @vent = new Marionette.EventBinder
 
     # Init different classes of the module
     initModelClass.call @, options.model
@@ -36,36 +36,36 @@ ModuleController = class
   getName: ->
     @name
 
-  # ----------------------
-  setRouter: (router) ->
-    @router = router
-
-  # ----------------------
-  getRouter: ->
-    @router
-
-  # ----------------------
-  getRoutes: ->
-    # Define the router mappings with this controller
-    routeBindings = {}
-    routeBindings["#{@moduleBaseRoute}"] = "grid"
-    routeBindings["#{@moduleBaseRoute}/new"] = "create"
-    routeBindings["#{@moduleBaseRoute}/:id/edit"] = "edit"
-#          "#{@modulePath}/:id": "show"
-#          "#{@modulePath}/:id/edit": "edit"
-
-    # TODO: When the lib underscore will be bumped to 1.4+ in Backbone, change this code
-    #@routePaths = _.invert(routeBindings)
-    @routePaths = {}
-    @routePaths["grid"] = @moduleBaseRoute
-    @routePaths["create"] = "#{@moduleBaseRoute}/new"
-    @routePaths["edit"] = "#{@moduleBaseRoute}/:id/edit"
-
-    routeBindings
-
-  # ----------------------
-  getRoute: (routeName) ->
-    @routePaths[routeName]
+#  # ----------------------
+#  setRouter: (router) ->
+#    @router = router
+#
+#  # ----------------------
+#  getRouter: ->
+#    @router
+#
+#  # ----------------------
+#  getRoutes: ->
+#    # Define the router mappings with this controller
+#    routeBindings = {}
+#    routeBindings["#{@moduleBaseRoute}"] = "grid"
+#    routeBindings["#{@moduleBaseRoute}/new"] = "create"
+#    routeBindings["#{@moduleBaseRoute}/:id/edit"] = "edit"
+##          "#{@modulePath}/:id": "show"
+##          "#{@modulePath}/:id/edit": "edit"
+#
+#    # TODO: When the lib underscore will be bumped to 1.4+ in Backbone, change this code
+#    #@routePaths = _.invert(routeBindings)
+#    @routePaths = {}
+#    @routePaths["grid"] = @moduleBaseRoute
+#    @routePaths["create"] = "#{@moduleBaseRoute}/new"
+#    @routePaths["edit"] = "#{@moduleBaseRoute}/:id/edit"
+#
+#    routeBindings
+#
+#  # ----------------------
+#  getRoute: (routeName) ->
+#    @routePaths[routeName]
 
   # ----------------------
   initModelClass = (modelClass) ->
@@ -94,12 +94,12 @@ ModuleController = class
         @collectionClass.prototype.model = @modelClass
 
     # Otherwise create a default collection
-    else
-      @collectionClass = Ajadmin.StatedCollection.extend
-        url: @moduleBaseUrl
-        model: @modelClass
-
-    @collection = new @collectionClass()
+#    else
+#      @collectionClass = Admin.StatedCollection.extend
+#        url: @moduleBaseUrl
+#        model: @modelClass
+#
+#    @collection = new @collectionClass()
 
 #    # ----------------------
 #    initRowViewClass = (rowViewClass) ->
@@ -189,15 +189,15 @@ ModuleController = class
 #      @gridLayoutClass.prototype.controller = @
 
     # Check if the datagrid library is enabled
-    if Ajadmin.Dg
+    if Admin.Dg
       unless gridLayoutClass
-        @gridLayoutClass = Ajadmin.Dg.createDefaultLayout(
+        @gridLayoutClass = Admin.Dg.createDefaultLayout(
           collection: @collection
           gridRegions:
             table:
-              view: Ajadmin.Dg.DefaultTableView.extend
-                itemView: Ajadmin.Dg.createRowView(@modelClass, "#{@templatePath}/row")
-                headerView: Ajadmin.Dg.createTableHeaderView("#{@templatePath}/headers")
+              view: Admin.Dg.DefaultTableView.extend
+                itemView: Admin.Dg.createRowView(@modelClass, "#{@templatePath}/row")
+                headerView: Admin.Dg.createTableHeaderView("#{@templatePath}/headers")
         )
 
   # ----------------------

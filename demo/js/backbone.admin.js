@@ -135,9 +135,7 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       }
       alert(moduleName);
       module = retrieveModule.call(this, moduleName);
-      if (changeUrl) {
-        module.getRouter().changeUrl("grid");
-      }
+      History.navigate("/books");
       return gvent.trigger("changeView", new module.gridLayoutClass());
     };
 
@@ -247,7 +245,6 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       this.moduleBaseRoute = this.moduleBaseUrl.replace(/^\//, "");
       this.pagesBasePath = options.pagesBasePath != null ? options.pagesBasePath.replace(/\/$/, "") : null;
       this.templatePath = this.pagesBasePath ? "" + this.pagesBasePath + "/" + this.moduleBaseRoute : this.moduleBaseRoute;
-      this.vent = new Marionette.EventBinder;
       initModelClass.call(this, options.model);
       initCollectionClass.call(this, options.collection);
       initGridLayoutClass.call(this, options.gridLayout);
@@ -257,31 +254,6 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
 
     _Class.prototype.getName = function() {
       return this.name;
-    };
-
-    _Class.prototype.setRouter = function(router) {
-      return this.router = router;
-    };
-
-    _Class.prototype.getRouter = function() {
-      return this.router;
-    };
-
-    _Class.prototype.getRoutes = function() {
-      var routeBindings;
-      routeBindings = {};
-      routeBindings["" + this.moduleBaseRoute] = "grid";
-      routeBindings["" + this.moduleBaseRoute + "/new"] = "create";
-      routeBindings["" + this.moduleBaseRoute + "/:id/edit"] = "edit";
-      this.routePaths = {};
-      this.routePaths["grid"] = this.moduleBaseRoute;
-      this.routePaths["create"] = "" + this.moduleBaseRoute + "/new";
-      this.routePaths["edit"] = "" + this.moduleBaseRoute + "/:id/edit";
-      return routeBindings;
-    };
-
-    _Class.prototype.getRoute = function(routeName) {
-      return this.routePaths[routeName];
     };
 
     initModelClass = function(modelClass) {
@@ -310,27 +282,21 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
           this.collectionClass.prototype.url = modulePath;
         }
         if (!this.collectionClass.prototype.model) {
-          this.collectionClass.prototype.model = this.modelClass;
+          return this.collectionClass.prototype.model = this.modelClass;
         }
-      } else {
-        this.collectionClass = Ajadmin.StatedCollection.extend({
-          url: this.moduleBaseUrl,
-          model: this.modelClass
-        });
       }
-      return this.collection = new this.collectionClass();
     };
 
     initGridLayoutClass = function(gridLayoutClass) {
-      if (Ajadmin.Dg) {
+      if (Admin.Dg) {
         if (!gridLayoutClass) {
-          return this.gridLayoutClass = Ajadmin.Dg.createDefaultLayout({
+          return this.gridLayoutClass = Admin.Dg.createDefaultLayout({
             collection: this.collection,
             gridRegions: {
               table: {
-                view: Ajadmin.Dg.DefaultTableView.extend({
-                  itemView: Ajadmin.Dg.createRowView(this.modelClass, "" + this.templatePath + "/row"),
-                  headerView: Ajadmin.Dg.createTableHeaderView("" + this.templatePath + "/headers")
+                view: Admin.Dg.DefaultTableView.extend({
+                  itemView: Admin.Dg.createRowView(this.modelClass, "" + this.templatePath + "/row"),
+                  headerView: Admin.Dg.createTableHeaderView("" + this.templatePath + "/headers")
                 })
               }
             }
@@ -551,32 +517,11 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     }
   });
   Admin.instanciateModule = function(options) {
-    var Router, module;
+    var module;
     if (applicationStarted) {
       throw new Error("Application already started, it is not possible to register more modules.");
     } else {
       module = new ModuleController(options);
-      Router = Marionette.AppRouter.extend({
-        controller: module,
-        appRoutes: module.getRoutes(),
-        initialize: function() {
-          return this.on("changeUrl", function(type) {
-            return this.changeUrl(type);
-          });
-        },
-        changeUrl: function(type, options) {
-          var key, route, value;
-          route = this.controller.getRoute(type);
-          if (options) {
-            for (key in options) {
-              value = options[key];
-              route = route.replace(":" + key, value);
-            }
-          }
-          return this.navigate(route);
-        }
-      });
-      module.setRouter(new Router());
       return mainController.registerModule(module);
     }
   };
@@ -620,7 +565,7 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     CRUDApplication.addInitializer(function() {
       var navigationView;
       navigationView = new navigationViewClass();
-      navigationView.listenTo(navigationView, "navigate:switchModule", mainController.switchModule);
+      navigationView.on("navigate:switchModule", mainController.switchModule, mainController);
       return this.addRegions({
         mainRegion: mainRegion
       });
