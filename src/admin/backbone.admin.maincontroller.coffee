@@ -17,7 +17,6 @@ MainController = class
       @modules[module.getName()] = module
 
   switchModule: (moduleName, changeUrl = true) ->
-    alert moduleName
     module = retrieveModule.call @, moduleName
 
 #    History.navigate "/books"

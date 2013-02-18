@@ -133,9 +133,7 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       if (changeUrl == null) {
         changeUrl = true;
       }
-      alert(moduleName);
       module = retrieveModule.call(this, moduleName);
-      History.navigate("/books");
       return gvent.trigger("changeView", new module.gridLayoutClass());
     };
 
@@ -535,7 +533,7 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     }
   };
   Admin.start = function(options) {
-    var CRUDApplication, mainRegion, navigationViewClass;
+    var CRUDApplication, mainRegion, navigationViewClass, router, switchModule;
     if (!initialized) {
       Admin.init();
     }
@@ -553,6 +551,15 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     } else {
       navigationViewClass = Admin.NavigationView;
     }
+    router = new Backbone.Router();
+    switchModule = function(moduleName) {
+      router.route(moduleName, moduleName, function() {
+        return alert(moduleName);
+      });
+      return router.navigate(moduleName, {
+        trigger: true
+      });
+    };
     CRUDApplication = new Marionette.Application();
     CRUDApplication.on("initialize:after", function() {
       return Backbone.history.start({
@@ -565,7 +572,7 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     CRUDApplication.addInitializer(function() {
       var navigationView;
       navigationView = new navigationViewClass();
-      navigationView.on("navigate:switchModule", mainController.switchModule, mainController);
+      navigationView.on("navigate:switchModule", switchModule);
       return this.addRegions({
         mainRegion: mainRegion
       });

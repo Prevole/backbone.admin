@@ -229,6 +229,17 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
     else
       navigationViewClass = Admin.NavigationView
 
+    router = new Backbone.Router()
+
+    switchModule = (moduleName) ->
+      router.route(moduleName, moduleName, ->
+        alert moduleName
+      )
+
+#      alert moduleName
+      router.navigate(moduleName, {trigger: true})
+#      mainController.switchModule(moduleName)
+
     CRUDApplication = new Marionette.Application()
 
     CRUDApplication.on "initialize:after", ->
@@ -241,7 +252,8 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
       navigationView = new navigationViewClass()
 #      mainController = new MainController()
 
-      navigationView.on "navigate:switchModule", mainController.switchModule, mainController
+      navigationView.on "navigate:switchModule", switchModule
+#                        mainController.switchModule, mainController
 
       @addRegions
         mainRegion: mainRegion
