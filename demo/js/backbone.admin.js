@@ -111,52 +111,16 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
 
   })(Marionette.Region);
   MainController = (function() {
-    var retrieveModule;
 
     function _Class(options) {
       this.modules = {};
     }
 
     _Class.prototype.registerModule = function(module) {
-      if (module === void 0 || !(module instanceof ModuleController)) {
-        throw new Error("The module is not defined or not an instance of Module class");
-      }
       if (this.modules[module.getName()] !== void 0) {
         throw new Error("The module " + (module.getName()) + " is already instanciated.");
       } else {
         return this.modules[module.getName()] = module;
-      }
-    };
-
-    _Class.prototype.switchModule = function(moduleName, changeUrl) {
-      var module;
-      if (changeUrl == null) {
-        changeUrl = true;
-      }
-      module = retrieveModule.call(this, moduleName);
-      return gvent.trigger("changeView", new module.gridLayoutClass());
-    };
-
-    _Class.prototype.crudView = function(view, type, options) {
-      var module;
-      module = view.prototype.controller;
-      switch (type) {
-        case "create":
-          module.getRouter().changeUrl(type);
-          break;
-        case "edit":
-          module.getRouter().changeUrl(type, {
-            id: options.model.get("id")
-          });
-      }
-      return gvent.trigger("changeView", new view(options));
-    };
-
-    retrieveModule = function(moduleName) {
-      if (this.modules[moduleName]) {
-        return this.modules[moduleName];
-      } else {
-        throw new Error("The module " + moduleName + " is not registered.");
       }
     };
 
@@ -423,6 +387,26 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     return _Class;
 
   })(Marionette.View);
+  Admin.CrudModule = (function() {
+    var initGridLayoutClass;
+
+    function _Class(options) {
+      if (this.name === void 0) {
+        throw new Error("The name of the module must be defined");
+      }
+    }
+
+    _Class.prototype.getRoutes = function() {
+      if (this.routes === void 0) {
+        throw new Error("At least one route must be defined");
+      }
+    };
+
+    initGridLayoutClass = function(gridLayoutClass) {};
+
+    return _Class;
+
+  })();
   /*
     Defaults i18nKeys used in the translations if `i18n-js` is used.
   

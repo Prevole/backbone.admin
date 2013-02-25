@@ -1,4 +1,4 @@
-var CreateView, DataModel, EditView, MainRegion, NavigationView, data, dataCollection, models,
+var CreateView, DataModel, EditView, MainRegion, NavigationView, Test, data, dataCollection, models, t2,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -337,9 +337,22 @@ Admin.instanciateModule({
   editView: EditView
 });
 
-$(document).ready(function() {
-  return Admin.start({
-    navigationView: NavigationView,
-    mainRegion: MainRegion
-  });
-});
+Test = (function(_super) {
+
+  __extends(_Class, _super);
+
+  function _Class() {
+    return _Class.__super__.constructor.apply(this, arguments);
+  }
+
+  _Class.prototype.name = "Name test";
+
+  _Class.prototype.routes = {};
+
+  return _Class;
+
+})(Admin.CrudModule);
+
+t2 = new Test();
+
+t2.getRoutes();

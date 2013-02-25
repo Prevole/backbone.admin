@@ -43,6 +43,7 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
   #= backbone.admin.formview.coffee
   #= backbone.admin.modulecontroller.coffee
   #= backbone.admin.navigationview.coffee
+  #= backbone.admin.crudmodule.coffee
 
   ###
   Defaults i18nKeys used in the translations if `i18n-js` is used.

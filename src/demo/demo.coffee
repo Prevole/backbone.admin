@@ -112,8 +112,21 @@ MainRegion = class extends Backbone.Marionette.Region
 
 #= modules/books.coffee
 
-$(document).ready ->
-  Admin.start(
-    navigationView: NavigationView
-    mainRegion: MainRegion
-  )
+t1 = new Admin.CrudModule()
+
+t1.getRoutes()
+
+Test = class extends Admin.CrudModule
+  name: "Name test"
+
+  routes: {}
+
+t2 = new Test()
+
+t2.getRoutes()
+
+#$(document).ready ->
+#  Admin.start(
+#    navigationView: NavigationView
+#    mainRegion: MainRegion
+#  )
