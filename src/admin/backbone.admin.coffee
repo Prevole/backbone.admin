@@ -37,12 +37,13 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
 
 
   # backbone.admin.utils.coffee
-  #= backbone.admin.authorizator.coffee
-  #= backbone.admin.mainregion.coffee
-  #= backbone.admin.maincontroller.coffee
-  #= backbone.admin.formview.coffee
-  #= backbone.admin.modulecontroller.coffee
-  #= backbone.admin.navigationview.coffee
+  # backbone.admin.authorizator.coffee
+  # backbone.admin.mainregion.coffee
+  # backbone.admin.maincontroller.coffee
+  # backbone.admin.formview.coffee
+  # backbone.admin.modulecontroller.coffee
+  # backbone.admin.navigationview.coffee
+  #= backbone.admin.module.coffee
   #= backbone.admin.crudmodule.coffee
 
   ###
@@ -75,6 +76,16 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
       i18nKeys
     )
 
+#  Admin.createCrudModule = (name, collection, options) ->
+#    Admin.createCrudModule(name, collection.prototype.model, collection, options)
+#
+#  Admin.createCrudModule = (name, model, collection, options) ->
+#    class extends Admin.CrudModule
+#      name: name
+#      collection: collection
+#      model: model
+#      actions: options.actions
+#      routableActions: options.routableActions
 
 # ----------------------------------------------------------------------------------------------------------------------
 

@@ -1,16 +1,10 @@
-Admin.CrudModule = class extends Admin.Module
+Admin.Module = class
   constructor: (options) ->
-    super(options)
+    if @name is undefined
+      throw new Error "The name of the module must be defined"
 
-    if @collection is undefined
-      throw new Error "The collection must be specified"
-
-    if @model is undefined and not (@collection.prototype.model is undefined)
-      @model = @collection.prototype.model
-
-    if @model is undefined
-      throw new Error "The model must be specified"
-
+    if @routableActions is undefined
+      throw new Error "At least one routable action must be defined"
 
   getRoutableActions: ->
     @routableActions

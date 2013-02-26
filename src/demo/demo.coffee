@@ -77,53 +77,40 @@ dataCollection = class extends Backbone.Collection
     @meta = _.defaults options, @meta
     @fetch()
 
-NavigationView = class extends Admin.NavigationView
-  el: ".menu"
-
-  events:
-    "click a": "handleClick"
-
-  # Handle click on menu item
-  # @param [Event] event The event
-  handleClick: (event) ->
-    event.preventDefault()
-    @switchModule $(event.target).attr("data-module")
-
-# Region that implements a transitional change of views
-MainRegion = class extends Backbone.Marionette.Region
-  el: ".content"
-
-  # Open
-  # @param [Backbone.View] view The view to open
-  open: (view) ->
-    @$el.html view.el
-    @$el.show "slide", { direction: "left" }, 1000, =>
-      view.trigger "transition:open"
-
-  # Show
-  # @param [Backbone.View] view The view to show
-  show: (view) ->
-    if @$el
-      $(@el).hide "slide", { direction: "left" }, 1000, =>
-        view.trigger "transition:show"
-        super view
-    else
-      super view
+#NavigationView = class extends Admin.NavigationView
+#  el: ".menu"
+#
+#  events:
+#    "click a": "handleClick"
+#
+#  # Handle click on menu item
+#  # @param [Event] event The event
+#  handleClick: (event) ->
+#    event.preventDefault()
+#    @switchModule $(event.target).attr("data-module")
+#
+## Region that implements a transitional change of views
+#MainRegion = class extends Backbone.Marionette.Region
+#  el: ".content"
+#
+#  # Open
+#  # @param [Backbone.View] view The view to open
+#  open: (view) ->
+#    @$el.html view.el
+#    @$el.show "slide", { direction: "left" }, 1000, =>
+#      view.trigger "transition:open"
+#
+#  # Show
+#  # @param [Backbone.View] view The view to show
+#  show: (view) ->
+#    if @$el
+#      $(@el).hide "slide", { direction: "left" }, 1000, =>
+#        view.trigger "transition:show"
+#        super view
+#    else
+#      super view
 
 #= modules/books.coffee
-
-t1 = new Admin.CrudModule()
-
-t1.getRoutes()
-
-Test = class extends Admin.CrudModule
-  name: "Name test"
-
-  routes: {}
-
-t2 = new Test()
-
-t2.getRoutes()
 
 #$(document).ready ->
 #  Admin.start(

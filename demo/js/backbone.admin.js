@@ -28,7 +28,7 @@ var Admin,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
-  var MainController, ModuleController, applicationStarted, authorizator, gvent, i18nKeys, initialized, mainController, moduleNamePattern;
+  var applicationStarted, authorizator, gvent, i18nKeys, initialized, moduleNamePattern;
   Admin = {
     version: "0.0.1"
   };
@@ -37,369 +37,27 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
   moduleNamePattern = new RegExp(/[a-z]+(:[a-z]+)*/);
   gvent = new Marionette.EventAggregator();
   authorizator = null;
-  /*
-  */
-
-  Admin.Authorizator = (function() {
-
-    function _Class() {}
-
-    /*
-        Check if an action is authorized for the user or not.
-      
-        @param {String} action The action to check
-        @param {Object} subject Can represent the user to check if he can do the action or not
-        @return {Boolean} True/False depending the result of the authorization process
-    */
-
-
-    _Class.prototype.can = function(action, subject) {
-      return true;
-    };
-
-    /*
-        Convenient method to apply the inverse of can method
-      
-        @param {String} action The action to check
-        @param {Object} subject Can represent the user to check if he can do the action or not
-        @return {Boolean} True/False depending the result of the authorization process
-    */
-
-
-    _Class.prototype.cannot = function(action, subject) {
-      return !this.can(action, subject);
-    };
-
-    return _Class;
-
-  })();
-  Admin.MainRegion = (function(_super) {
-
-    __extends(_Class, _super);
-
-    function _Class() {
-      return _Class.__super__.constructor.apply(this, arguments);
-    }
-
-    _Class.prototype.el = ".content";
-
-    _Class.prototype.open = function(view) {
-      var _this = this;
-      this.$el.html(view.el);
-      return this.$el.show("slide", {
-        direction: "up"
-      }, 1000, function() {
-        return view.trigger("transition:open");
-      });
-    };
-
-    _Class.prototype.show = function(view) {
-      var _this = this;
-      if (this.$el) {
-        return $(this.el).hide("slide", {
-          direction: "up"
-        }, 1000, function() {
-          view.trigger("transition:show");
-          return _Class.__super__.show.call(_this, view);
-        });
-      } else {
-        return _Class.__super__.show.call(this, view);
-      }
-    };
-
-    return _Class;
-
-  })(Marionette.Region);
-  MainController = (function() {
-
-    function _Class(options) {
-      this.modules = {};
-    }
-
-    _Class.prototype.registerModule = function(module) {
-      if (this.modules[module.getName()] !== void 0) {
-        throw new Error("The module " + (module.getName()) + " is already instanciated.");
-      } else {
-        return this.modules[module.getName()] = module;
-      }
-    };
-
-    return _Class;
-
-  })();
-  mainController = new MainController();
-  Admin.FormView = (function(_super) {
-
-    __extends(_Class, _super);
-
-    function _Class() {
-      return _Class.__super__.constructor.apply(this, arguments);
-    }
-
-    _Class.prototype.events = {
-      "click .cancel": "cancel",
-      "click .create": "create",
-      "click .update": "update"
-    };
-
-    _Class.prototype.serializeData = function() {
-      return this.template;
-    };
-
-    _Class.prototype.getAttributes = function() {
-      throw new Error("Missing method getAttributes().");
-    };
-
-    _Class.prototype.create = function(event) {
-      var _this = this;
-      event.preventDefault();
-      this.model.set(this.getAttributes.call(this));
-      return this.controller.collection.create(this.model, {
-        wait: true,
-        success: function(model, response) {
-          return mainController.switchModule(_this.controller.name);
-        },
-        error: function(model, response) {
-          return _this.handleErrors(model, response);
-        }
-      });
-    };
-
-    _Class.prototype.update = function(event) {
-      var _this = this;
-      event.preventDefault();
-      return this.model.save(this.getAttributes.call(this), {
-        success: function(model, response) {
-          return mainController.switchModule(_this.controller.name);
-        },
-        error: function(model, response) {
-          return _this.handleErrors(model, response);
-        }
-      });
-    };
-
-    _Class.prototype.cancel = function(event) {
-      event.preventDefault();
-      return mainController.switchModule(this.controller.name);
-    };
-
-    _Class.prototype.handleErrors = function(model, response) {
-      return console.log("Server side validation failed.");
-    };
-
-    return _Class;
-
-  })(Backbone.Marionette.ItemView);
-  ModuleController = (function() {
-    var crudView, getCrudView, initCollectionClass, initCreateViewClass, initEditViewClass, initGridLayoutClass, initModelClass, isTemplateAvailable, loadTemplate;
-
-    function _Class(options) {
-      if (options === void 0) {
-        throw new Error("No option defined when some are required.");
-      }
-      if (!(options.moduleName != null)) {
-        throw new Error("No module defined or not a string.");
-      } else if (!moduleNamePattern.test(options.moduleName)) {
-        throw new Error("The module name is incorect.");
-      }
-      this.name = options.moduleName;
-      this.moduleBaseUrl = "/" + (this.name.replace(/:/g, "/"));
-      this.moduleBaseRoute = this.moduleBaseUrl.replace(/^\//, "");
-      this.pagesBasePath = options.pagesBasePath != null ? options.pagesBasePath.replace(/\/$/, "") : null;
-      this.templatePath = this.pagesBasePath ? "" + this.pagesBasePath + "/" + this.moduleBaseRoute : this.moduleBaseRoute;
-      initModelClass.call(this, options.model);
-      initCollectionClass.call(this, options.collection);
-      initGridLayoutClass.call(this, options.gridLayout);
-      initCreateViewClass.call(this, options.createView);
-      initEditViewClass.call(this, options.editView);
-    }
-
-    _Class.prototype.getName = function() {
-      return this.name;
-    };
-
-    initModelClass = function(modelClass) {
-      if (modelClass) {
-        this.modelClass = modelClass;
-      } else {
-        this.modelClass = (function(_super) {
-
-          __extends(_Class, _super);
-
-          function _Class() {
-            return _Class.__super__.constructor.apply(this, arguments);
-          }
-
-          return _Class;
-
-        })(Backbone.Model);
-      }
-      return this.modelClass.prototype.controller = this;
-    };
-
-    initCollectionClass = function(collectionClass) {
-      if (collectionClass) {
-        this.collectionClass = collectionClass;
-        if (!this.collectionClass.prototype.url) {
-          this.collectionClass.prototype.url = modulePath;
-        }
-        if (!this.collectionClass.prototype.model) {
-          return this.collectionClass.prototype.model = this.modelClass;
-        }
-      }
-    };
-
-    initGridLayoutClass = function(gridLayoutClass) {
-      if (Admin.Dg) {
-        if (!gridLayoutClass) {
-          return this.gridLayoutClass = Admin.Dg.createDefaultLayout({
-            collection: this.collection,
-            gridRegions: {
-              table: {
-                view: Admin.Dg.DefaultTableView.extend({
-                  itemView: Admin.Dg.createRowView(this.modelClass, "" + this.templatePath + "/row"),
-                  headerView: Admin.Dg.createTableHeaderView("" + this.templatePath + "/headers")
-                })
-              }
-            }
-          });
-        }
-      }
-    };
-
-    initCreateViewClass = function(createViewClass) {
-      if (createViewClass) {
-        this.createViewClass = createViewClass.extend({
-          model: this.modelClass
-        });
-        return this.createViewClass.prototype.controller = this;
-      }
-    };
-
-    initEditViewClass = function(editViewClass) {
-      if (editViewClass) {
-        this.editViewClass = (function(_super) {
-
-          __extends(_Class, _super);
-
-          function _Class() {
-            return _Class.__super__.constructor.apply(this, arguments);
-          }
-
-          return _Class;
-
-        })(editViewClass);
-        return this.editViewClass.prototype.controller = this;
-      }
-    };
-
-    isTemplateAvailable = function(type) {
-      switch (type) {
-        case "create":
-          return !(this.createViewClass.prototype.template === void 0);
-        case "edit":
-          return !(this.editViewClass.prototype.template === void 0);
-      }
-    };
-
-    loadTemplate = function(type, callback, options) {
-      var url,
-        _this = this;
-      if (type === "create") {
-        url = "" + this.collection.url + "/new";
-      } else {
-        url = "" + this.collection.url + "/" + (options.model.get("id")) + "/" + type;
-      }
-      return $.ajax({
-        type: 'GET',
-        dataType: 'html',
-        processData: false,
-        url: url,
-        success: function(response) {
-          switch (type) {
-            case "create":
-              _this.createViewClass.prototype.template = response;
-              break;
-            case "edit":
-              _this.editViewClass.prototype.template = response;
-          }
-          return callback(getCrudView.call(_this, type), type, options);
-        }
-      });
-    };
-
-    getCrudView = function(type) {
-      switch (type) {
-        case "create":
-          return this.createViewClass;
-        case "edit":
-          return this.editViewClass;
-      }
-    };
-
-    crudView = function(type, options) {
-      var callback;
-      callback = function(view, type, options) {
-        return mainController.crudView(view, type, options);
-      };
-      if (isTemplateAvailable.call(this, type)) {
-        return callback(getCrudView.call(this, type), type, options);
-      } else {
-        return loadTemplate.call(this, type, callback, options);
-      }
-    };
-
-    _Class.prototype.grid = function() {
-      return mainController.switchModule(this.name, false);
-    };
-
-    _Class.prototype.refresh = function() {
-      return this.collection.refresh();
-    };
-
-    _Class.prototype.create = function(model) {
-      return crudView.call(this, "create", {
-        model: model
-      });
-    };
-
-    _Class.prototype.edit = function(model) {
-      return crudView.call(this, "edit", {
-        model: model
-      });
-    };
-
-    return _Class;
-
-  })();
-  Admin.NavigationView = (function(_super) {
-
-    __extends(_Class, _super);
-
-    function _Class() {
-      return _Class.__super__.constructor.apply(this, arguments);
-    }
-
-    _Class.prototype.switchModule = function(moduleName) {
-      return this.trigger("navigate:switchModule", moduleName);
-    };
-
-    return _Class;
-
-  })(Marionette.View);
-  Admin.CrudModule = (function() {
+  Admin.Module = (function() {
     var initGridLayoutClass;
 
     function _Class(options) {
       if (this.name === void 0) {
         throw new Error("The name of the module must be defined");
       }
+      if (this.routableActions === void 0) {
+        throw new Error("At least one routable action must be defined");
+      }
     }
 
-    _Class.prototype.getRoutes = function() {
-      if (this.routes === void 0) {
-        throw new Error("At least one route must be defined");
+    _Class.prototype.getRoutableActions = function() {
+      return this.routableActions;
+    };
+
+    _Class.prototype.getActions = function() {
+      if (this.actions === void 0) {
+        throw new Error("No action are defined");
       }
+      return this.actions;
     };
 
     initGridLayoutClass = function(gridLayoutClass) {};
@@ -407,6 +65,40 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     return _Class;
 
   })();
+  Admin.CrudModule = (function(_super) {
+    var initGridLayoutClass;
+
+    __extends(_Class, _super);
+
+    function _Class(options) {
+      _Class.__super__.constructor.call(this, options);
+      if (this.collection === void 0) {
+        throw new Error("The collection must be specified");
+      }
+      if (this.model === void 0 && !(this.collection.prototype.model === void 0)) {
+        this.model = this.collection.prototype.model;
+      }
+      if (this.model === void 0) {
+        throw new Error("The model must be specified");
+      }
+    }
+
+    _Class.prototype.getRoutableActions = function() {
+      return this.routableActions;
+    };
+
+    _Class.prototype.getActions = function() {
+      if (this.actions === void 0) {
+        throw new Error("No action are defined");
+      }
+      return this.actions;
+    };
+
+    initGridLayoutClass = function(gridLayoutClass) {};
+
+    return _Class;
+
+  })(Admin.Module);
   /*
     Defaults i18nKeys used in the translations if `i18n-js` is used.
   
