@@ -3,6 +3,9 @@ Admin.Module = class
     if @name is undefined
       throw new Error "The name of the module must be defined"
 
+    if @baseUrl is undefined
+      @baseUrl = "/#{@name.replace(/:/g, "/")}"
+
     if @routableActions is undefined
       throw new Error "At least one routable action must be defined"
 
@@ -27,7 +30,6 @@ Admin.Module = class
 #    @name = options.moduleName
 #
 #    # To build the default path and names
-#    @moduleBaseUrl    = "/#{@name.replace(/:/g, "/")}"
 #    @moduleBaseRoute  = @moduleBaseUrl.replace /^\//, ""
 #    @pagesBasePath    = if options.pagesBasePath? then options.pagesBasePath.replace(/\/$/, "") else null
 #    @templatePath     = if @pagesBasePath then "#{@pagesBasePath}/#{@moduleBaseRoute}" else @moduleBaseRoute
