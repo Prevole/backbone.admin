@@ -117,3 +117,8 @@ dataCollection = class extends Backbone.Collection
 #    navigationView: NavigationView
 #    mainRegion: MainRegion
 #  )
+
+NavigrationView = class extends Admin.NavigationView
+  el: ".menu"
+
+new Marionette.Application().start()

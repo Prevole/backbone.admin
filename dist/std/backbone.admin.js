@@ -37,12 +37,34 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
   moduleNamePattern = new RegExp(/[a-z]+(:[a-z]+)*/);
   gvent = new Marionette.EventAggregator();
   authorizator = null;
+  Admin.NavigationView = (function(_super) {
+
+    __extends(_Class, _super);
+
+    function _Class() {
+      return _Class.__super__.constructor.apply(this, arguments);
+    }
+
+    _Class.prototype.events = {
+      "click a": "action"
+    };
+
+    _Class.prototype.action = function(event) {
+      return alert($(event.target).attr("data-module"));
+    };
+
+    return _Class;
+
+  })(Marionette.View);
   Admin.Module = (function() {
     var initGridLayoutClass;
 
     function _Class(options) {
       if (this.name === void 0) {
         throw new Error("The name of the module must be defined");
+      }
+      if (this.baseUrl === void 0) {
+        this.baseUrl = "/" + (this.name.replace(/:/g, "/"));
       }
       if (this.routableActions === void 0) {
         throw new Error("At least one routable action must be defined");
