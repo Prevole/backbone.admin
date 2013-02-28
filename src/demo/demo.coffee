@@ -118,7 +118,47 @@ dataCollection = class extends Backbone.Collection
 #    mainRegion: MainRegion
 #  )
 
-NavigrationView = class extends Admin.NavigationView
+BooksModule = class extends Admin.Module
+  name: "books"
+  routableActions: {
+    main: "main"
+  }
+
+  main: ->
+    Test = Backbone.View.extend
+      el: ".content"
+
+      render: ->
+        $(@el).text("Books")
+
+    new Test()
+
+FruitsModule = class extends Admin.Module
+  name: "fruits"
+  routableActions: {
+    main: "main"
+  }
+
+  main: ->
+    Test = Backbone.View.extend
+      el: ".content"
+
+      render: ->
+        $(@el).text("Fruits")
+
+    new Test()
+
+NavigationView = class extends Admin.NavigationView
   el: ".menu"
 
-new Marionette.Application().start()
+$(document).ready ->
+  appController = new Admin.ApplicationController()
+
+  navigationView = new NavigationView()
+
+  appController.listenTo navigationView, "action", appController.action
+
+  appController.register(new BooksModule())
+  appController.register(new FruitsModule())
+
+  new Marionette.Application().start()

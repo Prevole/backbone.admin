@@ -37,6 +37,36 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
   moduleNamePattern = new RegExp(/[a-z]+(:[a-z]+)*/);
   gvent = new Marionette.EventAggregator();
   authorizator = null;
+  Admin.ApplicationController = (function() {
+
+    _Class.prototype.modules = {};
+
+    function _Class() {
+      _.extend(this, Backbone.Events);
+    }
+
+    _Class.prototype.action = function(name) {
+      var module;
+      module = this.modules[name];
+      return module[module.getRoutableActions()["main"]]().render();
+    };
+
+    _Class.prototype.register = function(module) {
+      if (module === void 0) {
+        throw new Error("The module cannot be undefined");
+      }
+      if (!(module instanceof Admin.Module)) {
+        throw new Error("The module must be from Admin.Module type");
+      }
+      if (this.modules[module.name] !== void 0) {
+        throw new Error("The module is already registered");
+      }
+      return this.modules[module.name] = module;
+    };
+
+    return _Class;
+
+  })();
   Admin.NavigationView = (function(_super) {
 
     __extends(_Class, _super);
@@ -46,11 +76,12 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     }
 
     _Class.prototype.events = {
-      "click a": "action"
+      "click [data-action]": "action"
     };
 
     _Class.prototype.action = function(event) {
-      return alert($(event.target).attr("data-module"));
+      event.preventDefault();
+      return this.trigger("action", $(event.target).attr("data-action"));
     };
 
     return _Class;

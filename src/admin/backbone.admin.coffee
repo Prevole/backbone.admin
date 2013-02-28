@@ -42,6 +42,8 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
   # backbone.admin.maincontroller.coffee
   # backbone.admin.formview.coffee
   # backbone.admin.modulecontroller.coffee
+
+  #= backbone.admin.appcontroller.coffee
   #= backbone.admin.navigationview.coffee
   #= backbone.admin.module.coffee
   #= backbone.admin.crudmodule.coffee

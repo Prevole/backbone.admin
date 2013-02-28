@@ -1,4 +1,4 @@
-var DataModel, NavigrationView, data, dataCollection, models,
+var BooksModule, DataModel, FruitsModule, NavigationView, data, dataCollection, models,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -222,7 +222,65 @@ dataCollection = (function(_super) {
 
 })(Backbone.Collection);
 
-NavigrationView = (function(_super) {
+BooksModule = (function(_super) {
+
+  __extends(_Class, _super);
+
+  function _Class() {
+    return _Class.__super__.constructor.apply(this, arguments);
+  }
+
+  _Class.prototype.name = "books";
+
+  _Class.prototype.routableActions = {
+    main: "main"
+  };
+
+  _Class.prototype.main = function() {
+    var Test;
+    Test = Backbone.View.extend({
+      el: ".content",
+      render: function() {
+        return $(this.el).text("Books");
+      }
+    });
+    return new Test();
+  };
+
+  return _Class;
+
+})(Admin.Module);
+
+FruitsModule = (function(_super) {
+
+  __extends(_Class, _super);
+
+  function _Class() {
+    return _Class.__super__.constructor.apply(this, arguments);
+  }
+
+  _Class.prototype.name = "fruits";
+
+  _Class.prototype.routableActions = {
+    main: "main"
+  };
+
+  _Class.prototype.main = function() {
+    var Test;
+    Test = Backbone.View.extend({
+      el: ".content",
+      render: function() {
+        return $(this.el).text("Fruits");
+      }
+    });
+    return new Test();
+  };
+
+  return _Class;
+
+})(Admin.Module);
+
+NavigationView = (function(_super) {
 
   __extends(_Class, _super);
 
@@ -236,4 +294,12 @@ NavigrationView = (function(_super) {
 
 })(Admin.NavigationView);
 
-new Marionette.Application().start();
+$(document).ready(function() {
+  var appController, navigationView;
+  appController = new Admin.ApplicationController();
+  navigationView = new NavigationView();
+  appController.listenTo(navigationView, "action", appController.action);
+  appController.register(new BooksModule());
+  appController.register(new FruitsModule());
+  return new Marionette.Application().start();
+});

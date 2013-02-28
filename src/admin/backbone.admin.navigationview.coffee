@@ -1,10 +1,8 @@
-# Manage the navigation menu
 Admin.NavigationView = class extends Marionette.View
-#  switchModule: (moduleName) ->
-#    @trigger "navigate:switchModule", moduleName
-
   events:
-    "click a": "action"
+    "click [data-action]": "action"
 
   action: (event) ->
-    alert $(event.target).attr("data-module")
+    event.preventDefault()
+
+    @trigger "action", $(event.target).attr("data-action")
