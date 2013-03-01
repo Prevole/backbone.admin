@@ -126,12 +126,12 @@ BooksModule = class extends Admin.Module
 
   main: ->
     Test = Backbone.View.extend
-      el: ".content"
+#      el: ".content"
 
       render: ->
-        $(@el).text("Books")
+        $(@el).text("Books: #{Date.now()}")
 
-    new Test()
+    r1: new Test()
 
 FruitsModule = class extends Admin.Module
   name: "fruits"
@@ -141,15 +141,21 @@ FruitsModule = class extends Admin.Module
 
   main: ->
     Test = Backbone.View.extend
-      el: ".content"
+#      el: ".content"
 
       render: ->
-        $(@el).text("Fruits")
+        $(@el).text("Fruits: #{Date.now()}")
 
-    new Test()
+    r2: new Test()
 
 NavigationView = class extends Admin.NavigationView
   el: ".menu"
+
+Region1 = class extends Marionette.Region
+  el: ".content1"
+
+Region2 = class extends Marionette.Region
+  el: ".content2"
 
 $(document).ready ->
   appController = new Admin.ApplicationController()
@@ -158,7 +164,18 @@ $(document).ready ->
 
   appController.listenTo navigationView, "action", appController.action
 
-  appController.register(new BooksModule())
-  appController.register(new FruitsModule())
+  appController.registerModule(new BooksModule())
+  appController.registerModule(new FruitsModule())
 
-  new Marionette.Application().start()
+  region1 = new Region1()
+  region2 = new Region2()
+
+  appController.registerRegion("r1", region1)
+  appController.registerRegion("r2", region2)
+
+  app = new Marionette.Application()
+
+  app.r1 = region1
+  app.r2 = region2
+
+  app.start()

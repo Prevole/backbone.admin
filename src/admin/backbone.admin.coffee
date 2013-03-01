@@ -38,7 +38,6 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
 
   # backbone.admin.utils.coffee
   # backbone.admin.authorizator.coffee
-  # backbone.admin.mainregion.coffee
   # backbone.admin.maincontroller.coffee
   # backbone.admin.formview.coffee
   # backbone.admin.modulecontroller.coffee
@@ -47,6 +46,8 @@ Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
   #= backbone.admin.navigationview.coffee
   #= backbone.admin.module.coffee
   #= backbone.admin.crudmodule.coffee
+
+  #= backbone.admin.mainregion.coffee
 
   ###
   Defaults i18nKeys used in the translations if `i18n-js` is used.

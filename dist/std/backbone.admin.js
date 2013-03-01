@@ -41,17 +41,31 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
 
     _Class.prototype.modules = {};
 
+    _Class.prototype.regions = {};
+
     function _Class() {
       _.extend(this, Backbone.Events);
     }
 
     _Class.prototype.action = function(name) {
-      var module;
+      var key, module, result, _i, _len, _ref, _results,
+        _this = this;
       module = this.modules[name];
-      return module[module.getRoutableActions()["main"]]().render();
+      result = module[module.getRoutableActions()["main"]]();
+      _ref = _.keys(result);
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        key = _ref[_i];
+        _results.push((function(key) {
+          if (_this.regions[key] !== void 0) {
+            return _this.regions[key].show(result[key]);
+          }
+        })(key));
+      }
+      return _results;
     };
 
-    _Class.prototype.register = function(module) {
+    _Class.prototype.registerModule = function(module) {
       if (module === void 0) {
         throw new Error("The module cannot be undefined");
       }
@@ -62,6 +76,13 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
         throw new Error("The module is already registered");
       }
       return this.modules[module.name] = module;
+    };
+
+    _Class.prototype.registerRegion = function(name, region) {
+      if (this.regions[name] !== void 0) {
+        throw new Error("The region " + name + " is already registered");
+      }
+      return this.regions[name] = region;
     };
 
     return _Class;
@@ -152,6 +173,19 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     return _Class;
 
   })(Admin.Module);
+  Admin.MainRegion = (function(_super) {
+
+    __extends(_Class, _super);
+
+    function _Class() {
+      return _Class.__super__.constructor.apply(this, arguments);
+    }
+
+    _Class.prototype.el = ".content";
+
+    return _Class;
+
+  })(Marionette.Region);
   /*
     Defaults i18nKeys used in the translations if `i18n-js` is used.
   

@@ -1,6 +1,7 @@
 # The main controller to rule the application on the client side
 Admin.ApplicationController = class
   modules: {}
+  regions: {}
 
   constructor: ->
     _.extend @, Backbone.Events
@@ -10,16 +11,24 @@ Admin.ApplicationController = class
   action: (name) ->
     module = @modules[name]
 
-    module[module.getRoutableActions()["main"]]().render()
+    result = module[module.getRoutableActions()["main"]]()
 
-  register: (module) ->
+    for key in _.keys(result)
+      do (key) =>
+        unless @regions[key] is undefined
+          @regions[key].show result[key]
+
+  registerModule: (module) ->
     throw new Error "The module cannot be undefined" if module is undefined
     throw new Error "The module must be from Admin.Module type" unless module instanceof Admin.Module
     throw new Error "The module is already registered" unless @modules[module.name] is undefined
 
     @modules[module.name] = module
 
+  registerRegion: (name, region) ->
+    throw new Error "The region #{name} is already registered" unless @regions[name] is undefined
 
+    @regions[name] = region
 
 
 #  switchModule: (moduleName, changeUrl = true) ->

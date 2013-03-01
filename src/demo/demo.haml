@@ -33,7 +33,11 @@
         = " | "
         %a{href: "fruits", data-action: "fruits"}= "Fruits"
 
-      .content
+      -#.content
+      %table{style: "width:100%"}
+        %tr
+          %td.content1
+          %td.content2
 
       -#%p.lead= "Backbone Datagrid is a plugin to organize present data with some controls like sorting, pagging, filtering. "
       -#  %a{link: "http://backbonejs.org", target: "_blank"}= "Backbone"

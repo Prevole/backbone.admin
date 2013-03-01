@@ -1,4 +1,4 @@
-var BooksModule, DataModel, FruitsModule, NavigationView, data, dataCollection, models,
+var BooksModule, DataModel, FruitsModule, NavigationView, Region1, Region2, data, dataCollection, models,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -239,12 +239,13 @@ BooksModule = (function(_super) {
   _Class.prototype.main = function() {
     var Test;
     Test = Backbone.View.extend({
-      el: ".content",
       render: function() {
-        return $(this.el).text("Books");
+        return $(this.el).text("Books: " + (Date.now()));
       }
     });
-    return new Test();
+    return {
+      r1: new Test()
+    };
   };
 
   return _Class;
@@ -268,12 +269,13 @@ FruitsModule = (function(_super) {
   _Class.prototype.main = function() {
     var Test;
     Test = Backbone.View.extend({
-      el: ".content",
       render: function() {
-        return $(this.el).text("Fruits");
+        return $(this.el).text("Fruits: " + (Date.now()));
       }
     });
-    return new Test();
+    return {
+      r2: new Test()
+    };
   };
 
   return _Class;
@@ -294,12 +296,47 @@ NavigationView = (function(_super) {
 
 })(Admin.NavigationView);
 
+Region1 = (function(_super) {
+
+  __extends(_Class, _super);
+
+  function _Class() {
+    return _Class.__super__.constructor.apply(this, arguments);
+  }
+
+  _Class.prototype.el = ".content1";
+
+  return _Class;
+
+})(Marionette.Region);
+
+Region2 = (function(_super) {
+
+  __extends(_Class, _super);
+
+  function _Class() {
+    return _Class.__super__.constructor.apply(this, arguments);
+  }
+
+  _Class.prototype.el = ".content2";
+
+  return _Class;
+
+})(Marionette.Region);
+
 $(document).ready(function() {
-  var appController, navigationView;
+  var app, appController, navigationView, region1, region2;
   appController = new Admin.ApplicationController();
   navigationView = new NavigationView();
   appController.listenTo(navigationView, "action", appController.action);
-  appController.register(new BooksModule());
-  appController.register(new FruitsModule());
-  return new Marionette.Application().start();
+  appController.registerModule(new BooksModule());
+  appController.registerModule(new FruitsModule());
+  region1 = new Region1();
+  region2 = new Region2();
+  appController.registerRegion("r1", region1);
+  appController.registerRegion("r2", region2);
+  app = new Marionette.Application();
+  app.r1 = region1;
+  app.r2 = region2;
+  return app.start();
 });
