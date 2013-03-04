@@ -58,7 +58,11 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
         key = _ref[_i];
         _results.push((function(key) {
           if (_this.regions[key] !== void 0) {
-            return _this.regions[key].show(result[key]);
+            if (result[key] instanceof String) {
+              return _this.regions[key][result[key]]();
+            } else {
+              return _this.regions[key].show(result[key]);
+            }
           }
         })(key));
       }

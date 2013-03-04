@@ -133,6 +133,18 @@ BooksModule = class extends Admin.Module
 
     r1: new Test()
 
+#Layout2 = class extends Marionette.Layout
+##  el: ".content2"
+#  template: "#test",
+#
+#  regions:
+#    a1:
+#      selector: "#a1"
+#      regionType: class extends Marionette.Region
+#    a2:
+#      selector: "#a2"
+#      regionType: class extends Marionette.Region
+
 FruitsModule = class extends Admin.Module
   name: "fruits"
   routableActions: {
@@ -146,7 +158,15 @@ FruitsModule = class extends Admin.Module
       render: ->
         $(@el).text("Fruits: #{Date.now()}")
 
-    r2: new Test()
+    Test2 = Backbone.View.extend
+      render: ->
+        $(@el).text("Vegetables: #{Date.now()}")
+
+    {
+      r1: new Test()
+      r2: new Test2()
+    }
+#    r2: new Layout2()
 
 NavigationView = class extends Admin.NavigationView
   el: ".menu"

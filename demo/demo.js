@@ -244,7 +244,8 @@ BooksModule = (function(_super) {
       }
     });
     return {
-      r1: new Test()
+      r1: new Test(),
+      r2: "close"
     };
   };
 
@@ -267,14 +268,20 @@ FruitsModule = (function(_super) {
   };
 
   _Class.prototype.main = function() {
-    var Test;
+    var Test, Test2;
     Test = Backbone.View.extend({
       render: function() {
         return $(this.el).text("Fruits: " + (Date.now()));
       }
     });
+    Test2 = Backbone.View.extend({
+      render: function() {
+        return $(this.el).text("Vegetables: " + (Date.now()));
+      }
+    });
     return {
-      r2: new Test()
+      r1: new Test(),
+      r2: new Test2()
     };
   };
 
