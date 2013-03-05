@@ -122,16 +122,43 @@ BooksModule = class extends Admin.Module
   name: "books"
   routableActions: {
     main: "main"
+    add: "add"
   }
 
   main: ->
     Test = Backbone.View.extend
+      events:
+        "click [data-action]": "action"
+
+      action: (event) ->
+        event.preventDefault()
+
+        @trigger "action", "add"
+
 #      el: ".content"
 
       render: ->
+        link = $("a").attr("href", "books/add").text("Add book")
         $(@el).text("Books: #{Date.now()}")
+        $(@el).append($("br")).append(link)
 
     r1: new Test()
+
+  add: ->
+    F1 = Backbone.View.extend
+#      el: ".content"
+
+      render: ->
+        $(@el).text("From books: Fruits: #{Date.now()}")
+
+    F2 = Backbone.View.extend
+      render: ->
+        $(@el).text("From books: Vegetables: #{Date.now()}")
+
+    {
+      r1: new F1()
+      r2: new F2()
+    }
 
 #Layout2 = class extends Marionette.Layout
 ##  el: ".content2"
@@ -178,7 +205,7 @@ Region2 = class extends Marionette.Region
   el: ".content2"
 
 $(document).ready ->
-  appController = new Admin.ApplicationController()
+  appController = new Admin.ApplicationController(new Marionette.Application())
 
   navigationView = new NavigationView()
 
@@ -193,9 +220,4 @@ $(document).ready ->
   appController.registerRegion("r1", region1)
   appController.registerRegion("r2", region2)
 
-  app = new Marionette.Application()
-
-  app.r1 = region1
-  app.r2 = region2
-
-  app.start()
+  appController.start()

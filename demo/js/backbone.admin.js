@@ -41,32 +41,40 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
 
     _Class.prototype.modules = {};
 
-    _Class.prototype.regions = {};
+    _Class.prototype.router = new Backbone.Router();
 
-    function _Class() {
+    function _Class(application) {
+      if (application === void 0) {
+        throw new Error("An application must be defined");
+      }
+      if (!(application instanceof Marionette.Application)) {
+        throw new Error("Application should be Marionnette.Application");
+      }
+      this.application = application;
       _.extend(this, Backbone.Events);
     }
 
     _Class.prototype.action = function(name) {
-      var key, module, result, _i, _len, _ref, _results,
+      var key, module, result, _fn, _i, _len, _ref,
         _this = this;
       module = this.modules[name];
       result = module[module.getRoutableActions()["main"]]();
       _ref = _.keys(result);
-      _results = [];
+      _fn = function(key) {
+        if (_this.application[key] !== void 0) {
+          return _this.application[key].show(result[key]);
+        }
+      };
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         key = _ref[_i];
-        _results.push((function(key) {
-          if (_this.regions[key] !== void 0) {
-            if (result[key] instanceof String) {
-              return _this.regions[key][result[key]]();
-            } else {
-              return _this.regions[key].show(result[key]);
-            }
-          }
-        })(key));
+        _fn(key);
       }
-      return _results;
+      this.router.route(name, name, function() {
+        return alert(name);
+      });
+      return this.router.navigate(name, {
+        trigger: true
+      });
     };
 
     _Class.prototype.registerModule = function(module) {
@@ -79,14 +87,22 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       if (this.modules[module.name] !== void 0) {
         throw new Error("The module is already registered");
       }
-      return this.modules[module.name] = module;
+      this.modules[module.name] = module;
+      return this.listenTo(module, "action", this.action);
     };
 
     _Class.prototype.registerRegion = function(name, region) {
-      if (this.regions[name] !== void 0) {
+      if (this.application[name] !== void 0) {
         throw new Error("The region " + name + " is already registered");
       }
-      return this.regions[name] = region;
+      return this.application[name] = region;
+    };
+
+    _Class.prototype.start = function() {
+      this.application.start();
+      return Backbone.history.start({
+        pushState: true
+      });
     };
 
     return _Class;
@@ -125,6 +141,7 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       if (this.routableActions === void 0) {
         throw new Error("At least one routable action must be defined");
       }
+      _.extend(this, Backbone.Events);
     }
 
     _Class.prototype.getRoutableActions = function() {
@@ -160,17 +177,6 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
         throw new Error("The model must be specified");
       }
     }
-
-    _Class.prototype.getRoutableActions = function() {
-      return this.routableActions;
-    };
-
-    _Class.prototype.getActions = function() {
-      if (this.actions === void 0) {
-        throw new Error("No action are defined");
-      }
-      return this.actions;
-    };
 
     initGridLayoutClass = function(gridLayoutClass) {};
 

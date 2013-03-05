@@ -233,19 +233,47 @@ BooksModule = (function(_super) {
   _Class.prototype.name = "books";
 
   _Class.prototype.routableActions = {
-    main: "main"
+    main: "main",
+    add: "add"
   };
 
   _Class.prototype.main = function() {
     var Test;
     Test = Backbone.View.extend({
+      events: {
+        "click [data-action]": "action"
+      },
+      action: function(event) {
+        event.preventDefault();
+        return this.trigger("action", "add");
+      },
       render: function() {
-        return $(this.el).text("Books: " + (Date.now()));
+        var link;
+        link = $("a").attr("href", "books/add").text("Add book");
+        $(this.el).text("Books: " + (Date.now()));
+        return $(this.el).append($("br")).append(link);
       }
     });
     return {
-      r1: new Test(),
-      r2: "close"
+      r1: new Test()
+    };
+  };
+
+  _Class.prototype.add = function() {
+    var F1, F2;
+    F1 = Backbone.View.extend({
+      render: function() {
+        return $(this.el).text("From books: Fruits: " + (Date.now()));
+      }
+    });
+    F2 = Backbone.View.extend({
+      render: function() {
+        return $(this.el).text("From books: Vegetables: " + (Date.now()));
+      }
+    });
+    return {
+      r1: new F1(),
+      r2: new F2()
     };
   };
 
@@ -332,8 +360,8 @@ Region2 = (function(_super) {
 })(Marionette.Region);
 
 $(document).ready(function() {
-  var app, appController, navigationView, region1, region2;
-  appController = new Admin.ApplicationController();
+  var appController, navigationView, region1, region2;
+  appController = new Admin.ApplicationController(new Marionette.Application());
   navigationView = new NavigationView();
   appController.listenTo(navigationView, "action", appController.action);
   appController.registerModule(new BooksModule());
@@ -342,8 +370,5 @@ $(document).ready(function() {
   region2 = new Region2();
   appController.registerRegion("r1", region1);
   appController.registerRegion("r2", region2);
-  app = new Marionette.Application();
-  app.r1 = region1;
-  app.r2 = region2;
-  return app.start();
+  return appController.start();
 });

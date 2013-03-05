@@ -12,15 +12,6 @@ Admin.CrudModule = class extends Admin.Module
       throw new Error "The model must be specified"
 
 
-  getRoutableActions: ->
-    @routableActions
-
-  getActions: ->
-    if @actions is undefined
-      throw new Error "No action are defined"
-
-    @actions
-
 #    if options is undefined
 #      throw new Error "No option defined when some are required."
 #

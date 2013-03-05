@@ -9,6 +9,8 @@ Admin.Module = class
     if @routableActions is undefined
       throw new Error "At least one routable action must be defined"
 
+    _.extend @, Backbone.Events
+
   getRoutableActions: ->
     @routableActions
 

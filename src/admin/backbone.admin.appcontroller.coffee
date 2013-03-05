@@ -1,9 +1,15 @@
 # The main controller to rule the application on the client side
 Admin.ApplicationController = class
   modules: {}
-  regions: {}
 
-  constructor: ->
+  router: new Backbone.Router()
+
+  constructor: (application) ->
+    throw new Error "An application must be defined" if application is undefined
+    throw new Error "Application should be Marionnette.Application" unless application instanceof Marionette.Application
+
+    @application = application
+
     _.extend @, Backbone.Events
 
 #    @on "action", @action, @
@@ -15,8 +21,15 @@ Admin.ApplicationController = class
 
     for key in _.keys(result)
       do (key) =>
-        unless @regions[key] is undefined
-          @regions[key].show result[key]
+        unless @application[key] is undefined
+          @application[key].show result[key]
+
+    @router.route(name, name, ->
+      alert name
+    )
+
+    @router.navigate(name, {trigger: true})
+
 
   registerModule: (module) ->
     throw new Error "The module cannot be undefined" if module is undefined
@@ -25,11 +38,17 @@ Admin.ApplicationController = class
 
     @modules[module.name] = module
 
+    @listenTo module, "action", @action
+
   registerRegion: (name, region) ->
-    throw new Error "The region #{name} is already registered" unless @regions[name] is undefined
+    throw new Error "The region #{name} is already registered" unless @application[name] is undefined
 
-    @regions[name] = region
+#    @regions[name] = region
+    @application[name] = region
 
+  start: ->
+    @application.start()
+    Backbone.history.start(pushState: true)
 
 #  switchModule: (moduleName, changeUrl = true) ->
 #    module = retrieveModule.call @, moduleName
