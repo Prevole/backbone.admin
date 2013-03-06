@@ -54,11 +54,20 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       _.extend(this, Backbone.Events);
     }
 
-    _Class.prototype.action = function(name) {
-      var key, module, result, _fn, _i, _len, _ref,
+    _Class.prototype.action = function(action) {
+      var actionName, key, module, moduleName, result, route, _fn, _i, _len, _ref,
         _this = this;
-      module = this.modules[name];
-      result = module[module.getRoutableActions()["main"]]();
+      if (action.match(/.*:.*/g)) {
+        moduleName = action.replace(/:.*/, "");
+        actionName = action.replace(/.*:/, "");
+        route = "" + moduleName + "/" + actionName;
+      } else {
+        moduleName = action;
+        actionName = "defaultAction";
+        route = moduleName;
+      }
+      module = this.modules[moduleName];
+      result = module[module.getRoutableActions()[actionName]]();
       _ref = _.keys(result);
       _fn = function(key) {
         if (_this.application[key] !== void 0) {
@@ -69,10 +78,8 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
         key = _ref[_i];
         _fn(key);
       }
-      this.router.route(name, name, function() {
-        return alert(name);
-      });
-      return this.router.navigate(name, {
+      this.router.route(route, action);
+      return this.router.navigate("" + route, {
         trigger: true
       });
     };
@@ -153,6 +160,10 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
         throw new Error("No action are defined");
       }
       return this.actions;
+    };
+
+    _Class.prototype.action = function(actionName) {
+      return this.trigger("action", actionName);
     };
 
     initGridLayoutClass = function(gridLayoutClass) {};

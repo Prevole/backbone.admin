@@ -121,26 +121,22 @@ dataCollection = class extends Backbone.Collection
 BooksModule = class extends Admin.Module
   name: "books"
   routableActions: {
-    main: "main"
+    defaultAction: "defaultAction"
     add: "add"
   }
 
-  main: ->
+  defaultAction: ->
     Test = Backbone.View.extend
       events:
         "click [data-action]": "action"
 
-      action: (event) ->
+      action: (event) =>
         event.preventDefault()
 
-        @trigger "action", "add"
-
-#      el: ".content"
+        @action $(event.target).attr("data-action")
 
       render: ->
-        link = $("a").attr("href", "books/add").text("Add book")
-        $(@el).text("Books: #{Date.now()}")
-        $(@el).append($("br")).append(link)
+        $(@el).html("Books: #{Date.now()} | <a href=\"books/add\" data-action=\"books:add\">Add book</a>")
 
     r1: new Test()
 
@@ -175,10 +171,10 @@ BooksModule = class extends Admin.Module
 FruitsModule = class extends Admin.Module
   name: "fruits"
   routableActions: {
-    main: "main"
+    defaultAction: "defaultAction"
   }
 
-  main: ->
+  defaultAction: ->
     Test = Backbone.View.extend
 #      el: ".content"
 

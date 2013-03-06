@@ -44,6 +44,11 @@
         %article{id: "a1"}= "Fruit 1"
         %article{id: "a2"}= "Fruit 2"
 
+    %script{id: "books", type: "text/template"}
+      %p= "Books are there"
+      %br
+      %a{href: "books/add", data-action: "books:add"}= "Add book"
+
       -#%p.lead= "Backbone Datagrid is a plugin to organize present data with some controls like sorting, pagging, filtering. "
       -#  %a{link: "http://backbonejs.org", target: "_blank"}= "Backbone"
       -#  = " and "

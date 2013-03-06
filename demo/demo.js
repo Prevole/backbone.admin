@@ -233,25 +233,23 @@ BooksModule = (function(_super) {
   _Class.prototype.name = "books";
 
   _Class.prototype.routableActions = {
-    main: "main",
+    defaultAction: "defaultAction",
     add: "add"
   };
 
-  _Class.prototype.main = function() {
-    var Test;
+  _Class.prototype.defaultAction = function() {
+    var Test,
+      _this = this;
     Test = Backbone.View.extend({
       events: {
         "click [data-action]": "action"
       },
       action: function(event) {
         event.preventDefault();
-        return this.trigger("action", "add");
+        return _this.action($(event.target).attr("data-action"));
       },
       render: function() {
-        var link;
-        link = $("a").attr("href", "books/add").text("Add book");
-        $(this.el).text("Books: " + (Date.now()));
-        return $(this.el).append($("br")).append(link);
+        return $(this.el).html("Books: " + (Date.now()) + " | <a href=\"books/add\" data-action=\"books:add\">Add book</a>");
       }
     });
     return {
@@ -292,10 +290,10 @@ FruitsModule = (function(_super) {
   _Class.prototype.name = "fruits";
 
   _Class.prototype.routableActions = {
-    main: "main"
+    defaultAction: "defaultAction"
   };
 
-  _Class.prototype.main = function() {
+  _Class.prototype.defaultAction = function() {
     var Test, Test2;
     Test = Backbone.View.extend({
       render: function() {

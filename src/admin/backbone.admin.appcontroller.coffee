@@ -14,22 +14,29 @@ Admin.ApplicationController = class
 
 #    @on "action", @action, @
 
-  action: (name) ->
-    module = @modules[name]
+  action: (action) ->
+#    alert action
 
-    result = module[module.getRoutableActions()["main"]]()
+    if action.match /.*:.*/g
+      moduleName = action.replace /:.*/, ""
+      actionName = action.replace /.*:/, ""
+      route = "#{moduleName}/#{actionName}"
+    else
+      moduleName = action
+      actionName = "defaultAction"
+      route = moduleName
+
+    module = @modules[moduleName]
+
+    result = module[module.getRoutableActions()[actionName]]()
 
     for key in _.keys(result)
       do (key) =>
         unless @application[key] is undefined
           @application[key].show result[key]
 
-    @router.route(name, name, ->
-      alert name
-    )
-
-    @router.navigate(name, {trigger: true})
-
+    @router.route(route, action)
+    @router.navigate("#{route}", {trigger: true})
 
   registerModule: (module) ->
     throw new Error "The module cannot be undefined" if module is undefined
