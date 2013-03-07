@@ -284,10 +284,19 @@ FruitsModule = class extends Admin.Module
   name: "fruits"
   routableActions: {
     defaultAction: "defaultAction"
+    add: "add"
   }
 
+  add: ->
+    alert "Add fruit"
+
   defaultAction: ->
-    r1: new FruitGridLayout()
+    fruitLayout = new FruitGridLayout()
+
+    @listenTo fruitLayout, "new", =>
+      action "fruits:add"
+
+    r1: fruitLayout
 
 #    Test = Backbone.View.extend
 ##      el: ".content"

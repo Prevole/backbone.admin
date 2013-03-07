@@ -479,12 +479,24 @@ FruitsModule = (function(_super) {
   _Class.prototype.name = "fruits";
 
   _Class.prototype.routableActions = {
-    defaultAction: "defaultAction"
+    defaultAction: "defaultAction",
+    add: "add"
+  };
+
+  _Class.prototype.add = function() {
+    return alert("Add fruit");
   };
 
   _Class.prototype.defaultAction = function() {
+    var fruitLayout,
+      _this = this;
+    fruitLayout = new FruitGridLayout();
+    this.listenTo(fruitLayout, "new", function() {
+      alert("There");
+      return _this.trigger("action", "fruits:add");
+    });
     return {
-      r1: new FruitGridLayout()
+      r1: fruitLayout
     };
   };
 

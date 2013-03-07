@@ -563,8 +563,9 @@ Backbone.Dg = Dg = (function(Backbone, Marionette, _, $) {
     _Class.prototype.create = function(event) {
       event.preventDefault();
       if (!this.ui.create.hasClass("disabled")) {
-        return this.ui.create.addClass("disabled");
+        this.ui.create.addClass("disabled");
       }
+      return this.vent.trigger("create:model");
     };
 
     /*
@@ -1321,6 +1322,8 @@ Backbone.Dg = Dg = (function(Backbone, Marionette, _, $) {
     __extends(_Class, _super);
 
     function _Class() {
+      this.handleCreate = __bind(this.handleCreate, this);
+
       this.handleRefresh = __bind(this.handleRefresh, this);
 
       this.handleUpdate = __bind(this.handleUpdate, this);
@@ -1351,6 +1354,7 @@ Backbone.Dg = Dg = (function(Backbone, Marionette, _, $) {
       this.vent.on("update", this.handleUpdate);
       this.vent.on("refresh", this.handleRefresh);
       this.vent.on("row:edit", this.handleEdit);
+      this.vent.on("create:model", this.handleCreate);
       return this.collection.on("fetched", this.refreshGrid);
     };
 
@@ -1400,6 +1404,10 @@ Backbone.Dg = Dg = (function(Backbone, Marionette, _, $) {
 
     _Class.prototype.handleEdit = function(model) {
       return alert(model.get("name"));
+    };
+
+    _Class.prototype.handleCreate = function() {
+      return this.trigger("new");
     };
 
     /*
