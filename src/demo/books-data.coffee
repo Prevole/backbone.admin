@@ -1,4 +1,4 @@
-data = [
+booksData = [
   {
     era: "Pre Republic",
     title: "Into the Void",

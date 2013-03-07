@@ -1,8 +1,7 @@
-#= demo-data.coffee
+#= books-data.coffee
+#= fruits-data.coffee
 
 DataModel = class extends Backbone.Model
-  fields: ["era", "serie", "title", "timeline", "author", "release", "type"]
-
   match: (quickSearch) ->
     _.reduce(@fields, (sum, attrName) ->
       sum || @attributes[attrName].toString().toLowerCase().indexOf(quickSearch) >= 0
@@ -11,14 +10,33 @@ DataModel = class extends Backbone.Model
   getFromIndex: (index) ->
     @get(@fields[index])
 
-models = _.reduce(data, (models, modelData) ->
-  models.push new DataModel(modelData)
+# -----
+
+BookModel = class extends DataModel
+  fields: ["era", "serie", "title", "timeline", "author", "release", "type"]
+
+# -----
+
+FruitModel = class extends DataModel
+  fields: ["name"]
+
+# -----
+
+bookModels = _.reduce(booksData, (models, modelData) ->
+  models.push new BookModel(modelData)
   models
 , [])
 
-dataCollection = class extends Backbone.Collection
-  model: DataModel
+# -----
 
+fruitModels = _.reduce(fruitsData, (models, modelData) ->
+  models.push new FruitModel(modelData)
+  models
+, [])
+
+# -----
+
+ModelCollection = class extends Backbone.Collection
   initialize: (models, options) ->
     if options is undefined or options.meta is undefined
       customs = {}
@@ -38,7 +56,7 @@ dataCollection = class extends Backbone.Collection
       storedSuccess(collection, response, options)
       @trigger "fetched"
 
-    localData = _.clone(models)
+    localData = _.clone @getModels()
 
     localData = _.filter localData, (model) =>
       return model.match(@meta.term.toLowerCase())
@@ -76,6 +94,98 @@ dataCollection = class extends Backbone.Collection
   updateInfo: (options) ->
     @meta = _.defaults options, @meta
     @fetch()
+
+# -----
+
+BookCollection = class extends ModelCollection
+  model: BookModel
+
+  getModels: ->
+    bookModels
+
+# -----
+
+FruitCollection = class extends ModelCollection
+  model: BookModel
+
+  getModels: ->
+    fruitModels
+
+# -----
+
+bookHeaderTemplate = (data) ->
+  "<th class='sorting'>Era</th>" +
+  "<th class='sorting'>Serie</th>" +
+  "<th class='sorting'>Title</th>" +
+  "<th class='sorting'>Timeline</th>" +
+  "<th class='sorting'>Author</th>" +
+  "<th class='sorting'>Release</th>" +
+  "<th class='sorting'>Type</th>"
+
+# -----
+
+bookRowTemplate = (data) ->
+  "<td>#{data.era}</td>" +
+  "<td>#{data.serie}</td>" +
+  "<td>#{data.title}</td>" +
+  "<td>#{data.timeline}</td>" +
+  "<td>#{data.author}</td>" +
+  "<td>#{data.release}</td>" +
+  "<td>#{data.type}</td>"
+
+# -----
+
+fruitHeaderTemplate = (data) ->
+  "<th class='sorting'>Name</th>"
+
+# -----
+
+fruitRowTemplate = (data) ->
+  "<td>#{data.name}</td>"
+
+# -----
+
+BookHeaderView = class extends Dg.HeaderView
+  template: bookHeaderTemplate
+
+# -----
+
+BookRowView = class extends Dg.RowView
+  template: bookRowTemplate
+
+# -----
+
+FruitHeaderView = class extends Dg.HeaderView
+  template: fruitHeaderTemplate
+
+# -----
+
+FruitRowView = class extends Dg.RowView
+  template: fruitRowTemplate
+
+# -----
+
+BookGridLayout = Dg.createGridLayout(
+  collection: new BookCollection(booksData)
+  gridRegions:
+    table:
+      view: Dg.TableView.extend
+        itemView: BookRowView
+        headerView: BookHeaderView
+)
+
+# -----
+
+FruitGridLayout = Dg.createGridLayout(
+  collection: new FruitCollection(fruitsData)
+  gridRegions:
+    table:
+      view: Dg.TableView.extend
+        itemView: FruitRowView
+        headerView: FruitHeaderView
+)
+
+# -----
 
 #NavigationView = class extends Admin.NavigationView
 #  el: ".menu"
@@ -126,19 +236,21 @@ BooksModule = class extends Admin.Module
   }
 
   defaultAction: ->
-    Test = Backbone.View.extend
-      events:
-        "click [data-action]": "action"
+    r1: new BookGridLayout()
 
-      action: (event) =>
-        event.preventDefault()
-
-        @action $(event.target).attr("data-action")
-
-      render: ->
-        $(@el).html("Books: #{Date.now()} | <a href=\"books/add\" data-action=\"books:add\">Add book</a>")
-
-    r1: new Test()
+#    Test = Backbone.View.extend
+#      events:
+#        "click [data-action]": "action"
+#
+#      action: (event) =>
+#        event.preventDefault()
+#
+#        @action $(event.target).attr("data-action")
+#
+#      render: ->
+#        $(@el).html("Books: #{Date.now()} | <a href=\"books/add\" data-action=\"books:add\">Add book</a>")
+#
+#    r1: new Test()
 
   add: ->
     F1 = Backbone.View.extend
@@ -175,20 +287,21 @@ FruitsModule = class extends Admin.Module
   }
 
   defaultAction: ->
-    Test = Backbone.View.extend
-#      el: ".content"
+    r1: new FruitGridLayout()
 
-      render: ->
-        $(@el).text("Fruits: #{Date.now()}")
-
-    Test2 = Backbone.View.extend
-      render: ->
-        $(@el).text("Vegetables: #{Date.now()}")
-
-    {
-      r1: new Test()
-      r2: new Test2()
-    }
+#    Test = Backbone.View.extend
+##      el: ".content"
+#
+#      render: ->
+#        $(@el).text("Fruits: #{Date.now()}")
+#
+#    Test2 = Backbone.View.extend
+#      render: ->
+#        $(@el).text("Vegetables: #{Date.now()}")
+#
+#     {
+#      r2: new Test2()
+#    }
 #    r2: new Layout2()
 
 NavigationView = class extends Admin.NavigationView
