@@ -50,6 +50,22 @@
       %br
       %a{href: "books/add", data-action: "books:add"}= "Add book"
 
+    %script{id: "fruitForm", type: "text/template"}
+      %h2= "Add fruit"
+      %from
+        %p
+          %label= "Name"
+          %input{id: "fruitName", type: "text", name: "name"}
+        %button.btn= "Create"
+
+    %script{id: "editFruitForm", type: "text/template"}
+      %h2= "Edit fruit"
+      %from
+        %p
+          %label= "Name"
+          %input{id: "fruitName", type: "text", name: "name"}
+        %button.btn= "Edit"
+
       -#%p.lead= "Backbone Datagrid is a plugin to organize present data with some controls like sorting, pagging, filtering. "
       -#  %a{link: "http://backbonejs.org", target: "_blank"}= "Backbone"
       -#  = " and "

@@ -4,6 +4,8 @@ Admin.ApplicationController = class
 
   router: new Backbone.Router()
 
+  started: false
+
   constructor: (application) ->
     throw new Error "An application must be defined" if application is undefined
     throw new Error "Application should be Marionnette.Application" unless application instanceof Marionette.Application
@@ -14,7 +16,7 @@ Admin.ApplicationController = class
 
 #    @on "action", @action, @
 
-  action: (action) ->
+  action: (action, options) ->
 #    alert action
 
     if action.match /.*:.*/g
@@ -28,7 +30,7 @@ Admin.ApplicationController = class
 
     module = @modules[moduleName]
 
-    result = module[module.getRoutableActions()[actionName]]()
+    result = module[module.getRoutableActions()[actionName]](options)
 
     for key in _.keys(result)
       do (key) =>
@@ -54,8 +56,16 @@ Admin.ApplicationController = class
     @application[name] = region
 
   start: ->
-    @application.start()
-    Backbone.history.start(pushState: true)
+    if @started
+      console.log "Application controller already started."
+    else
+      @application.start()
+      Backbone.history.start(pushState: true)
+
+      $(window).bind("popstate", (event) ->
+        alert event.originalEvent.state
+      )
+
 
 #  switchModule: (moduleName, changeUrl = true) ->
 #    module = retrieveModule.call @, moduleName

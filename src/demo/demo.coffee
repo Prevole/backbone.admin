@@ -103,13 +103,17 @@ BookCollection = class extends ModelCollection
   getModels: ->
     bookModels
 
+books = new BookCollection(booksData)
+
 # -----
 
 FruitCollection = class extends ModelCollection
-  model: BookModel
+  model: FruitModel
 
   getModels: ->
     fruitModels
+
+fruits = new FruitCollection(fruitsData)
 
 # -----
 
@@ -136,12 +140,14 @@ bookRowTemplate = (data) ->
 # -----
 
 fruitHeaderTemplate = (data) ->
-  "<th class='sorting'>Name</th>"
+  "<th class='sorting'>Name</th>" +
+  "<th>Action</th>"
 
 # -----
 
 fruitRowTemplate = (data) ->
-  "<td>#{data.name}</td>"
+  "<td>#{data.name}</td>" +
+  "<td><button class=\"edit btn btn-small\">Update</button></td>"
 
 # -----
 
@@ -166,7 +172,7 @@ FruitRowView = class extends Dg.RowView
 # -----
 
 BookGridLayout = Dg.createGridLayout(
-  collection: new BookCollection(booksData)
+  collection: books
   gridRegions:
     table:
       view: Dg.TableView.extend
@@ -177,7 +183,7 @@ BookGridLayout = Dg.createGridLayout(
 # -----
 
 FruitGridLayout = Dg.createGridLayout(
-  collection: new FruitCollection(fruitsData)
+  collection: fruits
   gridRegions:
     table:
       view: Dg.TableView.extend
@@ -285,16 +291,64 @@ FruitsModule = class extends Admin.Module
   routableActions: {
     defaultAction: "defaultAction"
     add: "add"
+    edit: "edit"
   }
 
   add: ->
-    alert "Add fruit"
+    self = @
+    AddFruitView = Marionette.ItemView.extend
+      template: "#fruitForm"
+      collection: fruits
+
+      events:
+        "click button": "addFruit"
+
+      ui:
+        fruitName: "#fruitName"
+
+      addFruit: (event) ->
+        event.preventDefault()
+
+        fruitModels.push new FruitModel({name: @ui.fruitName.val()})
+
+        self.action("fruits")
+
+    r1: new AddFruitView()
+
+  edit: (options) ->
+    self = @
+    EditFruitView = Marionette.ItemView.extend
+      template: "#editFruitForm"
+      model: options.model
+#      collection: fruits
+
+      events:
+        "click button": "editFruit"
+
+      ui:
+        fruitName: "#fruitName"
+
+      editFruit: (event) ->
+        event.preventDefault()
+
+        options.model.set("name", @ui.fruitName.val())
+#        fruitModels.push new FruitModel({name: @ui.fruitName.val()})
+
+        self.action("fruits")
+
+      onRender: ->
+        @ui.fruitName.val(@model.get("name"))
+
+    r1: new EditFruitView()
 
   defaultAction: ->
     fruitLayout = new FruitGridLayout()
 
     @listenTo fruitLayout, "new", =>
-      action "fruits:add"
+      @action "fruits:add"
+
+    @listenTo fruitLayout, "edit", (model) =>
+      @action "fruits:edit", {model: model}
 
     r1: fruitLayout
 

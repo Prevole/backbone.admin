@@ -43,6 +43,8 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
 
     _Class.prototype.router = new Backbone.Router();
 
+    _Class.prototype.started = false;
+
     function _Class(application) {
       if (application === void 0) {
         throw new Error("An application must be defined");
@@ -54,7 +56,7 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       _.extend(this, Backbone.Events);
     }
 
-    _Class.prototype.action = function(action) {
+    _Class.prototype.action = function(action, options) {
       var actionName, key, module, moduleName, result, route, _fn, _i, _len, _ref,
         _this = this;
       if (action.match(/.*:.*/g)) {
@@ -67,7 +69,7 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
         route = moduleName;
       }
       module = this.modules[moduleName];
-      result = module[module.getRoutableActions()[actionName]]();
+      result = module[module.getRoutableActions()[actionName]](options);
       _ref = _.keys(result);
       _fn = function(key) {
         if (_this.application[key] !== void 0) {
@@ -106,10 +108,17 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     };
 
     _Class.prototype.start = function() {
-      this.application.start();
-      return Backbone.history.start({
-        pushState: true
-      });
+      if (this.started) {
+        return console.log("Application controller already started.");
+      } else {
+        this.application.start();
+        Backbone.history.start({
+          pushState: true
+        });
+        return $(window).bind("popstate", function(event) {
+          return alert(event.originalEvent.state);
+        });
+      }
     };
 
     return _Class;
@@ -162,8 +171,8 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       return this.actions;
     };
 
-    _Class.prototype.action = function(actionName) {
-      return this.trigger("action", actionName);
+    _Class.prototype.action = function(actionName, options) {
+      return this.trigger("action", actionName, options);
     };
 
     initGridLayoutClass = function(gridLayoutClass) {};

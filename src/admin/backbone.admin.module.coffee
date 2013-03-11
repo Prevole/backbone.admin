@@ -20,8 +20,8 @@ Admin.Module = class
 
     @actions
 
-  action: (actionName) ->
-    @trigger "action", actionName
+  action: (actionName, options) ->
+    @trigger "action", actionName, options
 
 #    if options is undefined
 #      throw new Error "No option defined when some are required."

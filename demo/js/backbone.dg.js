@@ -1324,6 +1324,8 @@ Backbone.Dg = Dg = (function(Backbone, Marionette, _, $) {
     function _Class() {
       this.handleCreate = __bind(this.handleCreate, this);
 
+      this.handleEdit = __bind(this.handleEdit, this);
+
       this.handleRefresh = __bind(this.handleRefresh, this);
 
       this.handleUpdate = __bind(this.handleUpdate, this);
@@ -1403,7 +1405,7 @@ Backbone.Dg = Dg = (function(Backbone, Marionette, _, $) {
     };
 
     _Class.prototype.handleEdit = function(model) {
-      return alert(model.get("name"));
+      return this.trigger("edit", model);
     };
 
     _Class.prototype.handleCreate = function() {

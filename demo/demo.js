@@ -1,4 +1,4 @@
-var BookCollection, BookGridLayout, BookHeaderView, BookModel, BookRowView, BooksModule, DataModel, FruitCollection, FruitGridLayout, FruitHeaderView, FruitModel, FruitRowView, FruitsModule, ModelCollection, NavigationView, Region1, Region2, bookHeaderTemplate, bookModels, bookRowTemplate, booksData, fruitHeaderTemplate, fruitModels, fruitRowTemplate, fruitsData,
+var BookCollection, BookGridLayout, BookHeaderView, BookModel, BookRowView, BooksModule, DataModel, FruitCollection, FruitGridLayout, FruitHeaderView, FruitModel, FruitRowView, FruitsModule, ModelCollection, NavigationView, Region1, Region2, bookHeaderTemplate, bookModels, bookRowTemplate, books, booksData, fruitHeaderTemplate, fruitModels, fruitRowTemplate, fruits, fruitsData,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -311,6 +311,8 @@ BookCollection = (function(_super) {
 
 })(ModelCollection);
 
+books = new BookCollection(booksData);
+
 FruitCollection = (function(_super) {
 
   __extends(_Class, _super);
@@ -319,7 +321,7 @@ FruitCollection = (function(_super) {
     return _Class.__super__.constructor.apply(this, arguments);
   }
 
-  _Class.prototype.model = BookModel;
+  _Class.prototype.model = FruitModel;
 
   _Class.prototype.getModels = function() {
     return fruitModels;
@@ -328,6 +330,8 @@ FruitCollection = (function(_super) {
   return _Class;
 
 })(ModelCollection);
+
+fruits = new FruitCollection(fruitsData);
 
 bookHeaderTemplate = function(data) {
   return "<th class='sorting'>Era</th>" + "<th class='sorting'>Serie</th>" + "<th class='sorting'>Title</th>" + "<th class='sorting'>Timeline</th>" + "<th class='sorting'>Author</th>" + "<th class='sorting'>Release</th>" + "<th class='sorting'>Type</th>";
@@ -338,11 +342,11 @@ bookRowTemplate = function(data) {
 };
 
 fruitHeaderTemplate = function(data) {
-  return "<th class='sorting'>Name</th>";
+  return "<th class='sorting'>Name</th>" + "<th>Action</th>";
 };
 
 fruitRowTemplate = function(data) {
-  return "<td>" + data.name + "</td>";
+  return ("<td>" + data.name + "</td>") + "<td><button class=\"edit btn btn-small\">Update</button></td>";
 };
 
 BookHeaderView = (function(_super) {
@@ -402,7 +406,7 @@ FruitRowView = (function(_super) {
 })(Dg.RowView);
 
 BookGridLayout = Dg.createGridLayout({
-  collection: new BookCollection(booksData),
+  collection: books,
   gridRegions: {
     table: {
       view: Dg.TableView.extend({
@@ -414,7 +418,7 @@ BookGridLayout = Dg.createGridLayout({
 });
 
 FruitGridLayout = Dg.createGridLayout({
-  collection: new FruitCollection(fruitsData),
+  collection: fruits,
   gridRegions: {
     table: {
       view: Dg.TableView.extend({
@@ -480,11 +484,59 @@ FruitsModule = (function(_super) {
 
   _Class.prototype.routableActions = {
     defaultAction: "defaultAction",
-    add: "add"
+    add: "add",
+    edit: "edit"
   };
 
   _Class.prototype.add = function() {
-    return alert("Add fruit");
+    var AddFruitView, self;
+    self = this;
+    AddFruitView = Marionette.ItemView.extend({
+      template: "#fruitForm",
+      collection: fruits,
+      events: {
+        "click button": "addFruit"
+      },
+      ui: {
+        fruitName: "#fruitName"
+      },
+      addFruit: function(event) {
+        event.preventDefault();
+        fruitModels.push(new FruitModel({
+          name: this.ui.fruitName.val()
+        }));
+        return self.action("fruits");
+      }
+    });
+    return {
+      r1: new AddFruitView()
+    };
+  };
+
+  _Class.prototype.edit = function(options) {
+    var EditFruitView, self;
+    self = this;
+    EditFruitView = Marionette.ItemView.extend({
+      template: "#editFruitForm",
+      model: options.model,
+      events: {
+        "click button": "editFruit"
+      },
+      ui: {
+        fruitName: "#fruitName"
+      },
+      editFruit: function(event) {
+        event.preventDefault();
+        options.model.set("name", this.ui.fruitName.val());
+        return self.action("fruits");
+      },
+      onRender: function() {
+        return this.ui.fruitName.val(this.model.get("name"));
+      }
+    });
+    return {
+      r1: new EditFruitView()
+    };
   };
 
   _Class.prototype.defaultAction = function() {
@@ -492,8 +544,12 @@ FruitsModule = (function(_super) {
       _this = this;
     fruitLayout = new FruitGridLayout();
     this.listenTo(fruitLayout, "new", function() {
-      alert("There");
-      return _this.trigger("action", "fruits:add");
+      return _this.action("fruits:add");
+    });
+    this.listenTo(fruitLayout, "edit", function(model) {
+      return _this.action("fruits:edit", {
+        model: model
+      });
     });
     return {
       r1: fruitLayout
