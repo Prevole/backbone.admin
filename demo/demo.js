@@ -439,12 +439,16 @@ BooksModule = (function(_super) {
 
   _Class.prototype.name = "books";
 
-  _Class.prototype.routableActions = {
-    defaultAction: "defaultAction",
-    add: "add"
+  _Class.prototype.actions = {
+    main: {
+      path: "/books"
+    },
+    add: {
+      path: "/books/add"
+    }
   };
 
-  _Class.prototype.defaultAction = function() {
+  _Class.prototype.main = function() {
     return {
       r1: new BookGridLayout()
     };
@@ -482,10 +486,16 @@ FruitsModule = (function(_super) {
 
   _Class.prototype.name = "fruits";
 
-  _Class.prototype.routableActions = {
-    defaultAction: "defaultAction",
-    add: "add",
-    edit: "edit"
+  _Class.prototype.actions = {
+    main: {
+      path: "/fruits"
+    },
+    add: {
+      path: "/fruits/add"
+    },
+    edit: {
+      path: "/fruits/edit/:id"
+    }
   };
 
   _Class.prototype.add = function() {
@@ -539,7 +549,7 @@ FruitsModule = (function(_super) {
     };
   };
 
-  _Class.prototype.defaultAction = function() {
+  _Class.prototype.main = function() {
     var fruitLayout,
       _this = this;
     fruitLayout = new FruitGridLayout();

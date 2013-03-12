@@ -236,12 +236,17 @@ FruitGridLayout = Dg.createGridLayout(
 
 BooksModule = class extends Admin.Module
   name: "books"
-  routableActions: {
-    defaultAction: "defaultAction"
-    add: "add"
+
+  actions: {
+    main: {
+      path: "/books"
+    },
+    add: {
+      path: "/books/add"
+    }
   }
 
-  defaultAction: ->
+  main: ->
     r1: new BookGridLayout()
 
 #    Test = Backbone.View.extend
@@ -288,11 +293,29 @@ BooksModule = class extends Admin.Module
 
 FruitsModule = class extends Admin.Module
   name: "fruits"
-  routableActions: {
-    defaultAction: "defaultAction"
-    add: "add"
-    edit: "edit"
+#  routableActions: {
+#    defaultAction: "defaultAction"
+#    add: "add"
+#    edit: "edit"
+#  }
+
+  actions: {
+    main: {
+      path: "/fruits"
+    },
+    add: {
+      path: "/fruits/add"
+    },
+    edit: {
+      path: "/fruits/edit/:id"
+    }
   }
+
+#  routes: [
+#    {name: "default", url: "fruits"},
+#    {name: "add", url: "fruits/new"},
+#    {name: "edit", url: "fruits/edit/:id"}
+#  ]
 
   add: ->
     self = @
@@ -341,7 +364,7 @@ FruitsModule = class extends Admin.Module
 
     r1: new EditFruitView()
 
-  defaultAction: ->
+  main: ->
     fruitLayout = new FruitGridLayout()
 
     @listenTo fruitLayout, "new", =>

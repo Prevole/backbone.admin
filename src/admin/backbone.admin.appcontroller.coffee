@@ -25,20 +25,41 @@ Admin.ApplicationController = class
       route = "#{moduleName}/#{actionName}"
     else
       moduleName = action
-      actionName = "defaultAction"
+#      actionName = "def"
       route = moduleName
 
-    module = @modules[moduleName]
+#    module = @modules[moduleName]
 
-    result = module[module.getRoutableActions()[actionName]](options)
+#    result = module[module.getRoutableActions()[actionName]](options)
+#
+#    for key in _.keys(result)
+#      do (key) =>
+#        unless @application[key] is undefined
+#          @application[key].show result[key]
 
-    for key in _.keys(result)
-      do (key) =>
-        unless @application[key] is undefined
-          @application[key].show result[key]
+#    app = @application
 
-    @router.route(route, action)
+#    @router.route(route, action, ->
+#      alert "action:#{action}:#{route}"
+#
+#      result = module[module.getRoutableActions()[actionName]](options)
+#
+#      for key in _.keys(result)
+#        do (key) =>
+#          unless app[key] is undefined
+#            app[key].show result[key]
+#    )
     @router.navigate("#{route}", {trigger: true})
+
+  handleAction: (moduleName, path, options) ->
+    alert "#{moduleName}:#{paht}:#{options}"
+#    result = module[module.getRoutableActions()[actionName]](options)
+#
+#    for key in _.keys(result)
+#      do (key) =>
+#        unless app[key] is undefined
+#          app[key].show result[key]
+
 
   registerModule: (module) ->
     throw new Error "The module cannot be undefined" if module is undefined
@@ -46,6 +67,14 @@ Admin.ApplicationController = class
     throw new Error "The module is already registered" unless @modules[module.name] is undefined
 
     @modules[module.name] = module
+
+    alert "#{module.routes()}"
+
+    for route in module.routes()
+      do (route) =>
+        @router.route route, "#{module.name}:#{route}", (options) =>
+          alert "From router: #{module.name}:#{route}"
+          @handleAction module.name, route, options
 
     @listenTo module, "action", @action
 
@@ -61,10 +90,6 @@ Admin.ApplicationController = class
     else
       @application.start()
       Backbone.history.start(pushState: true)
-
-      $(window).bind("popstate", (event) ->
-        alert event.originalEvent.state
-      )
 
 
 #  switchModule: (moduleName, changeUrl = true) ->

@@ -1,24 +1,14 @@
 Admin.Module = class
   constructor: (options) ->
-    if @name is undefined
-      throw new Error "The name of the module must be defined"
+    throw new Error "The name of the module must be defined" if @name is undefined
+    throw new Error "At least one action must be defined" if @actions is undefined
 
-    if @baseUrl is undefined
-      @baseUrl = "/#{@name.replace(/:/g, "/")}"
-
-    if @routableActions is undefined
-      throw new Error "At least one routable action must be defined"
+    @baseUrl = "/#{@name.replace(/:/g, "/")}" if @baseUrl is undefined
 
     _.extend @, Backbone.Events
 
-  getRoutableActions: ->
-    @routableActions
-
-  getActions: ->
-    if @actions is undefined
-      throw new Error "No action are defined"
-
-    @actions
+  routes: ->
+    _.pluck _.values(@actions), "path"
 
   action: (actionName, options) ->
     @trigger "action", actionName, options

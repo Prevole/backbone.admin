@@ -57,36 +57,27 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     }
 
     _Class.prototype.action = function(action, options) {
-      var actionName, key, module, moduleName, result, route, _fn, _i, _len, _ref,
-        _this = this;
+      var actionName, moduleName, route;
       if (action.match(/.*:.*/g)) {
         moduleName = action.replace(/:.*/, "");
         actionName = action.replace(/.*:/, "");
         route = "" + moduleName + "/" + actionName;
       } else {
         moduleName = action;
-        actionName = "defaultAction";
         route = moduleName;
       }
-      module = this.modules[moduleName];
-      result = module[module.getRoutableActions()[actionName]](options);
-      _ref = _.keys(result);
-      _fn = function(key) {
-        if (_this.application[key] !== void 0) {
-          return _this.application[key].show(result[key]);
-        }
-      };
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        key = _ref[_i];
-        _fn(key);
-      }
-      this.router.route(route, action);
       return this.router.navigate("" + route, {
         trigger: true
       });
     };
 
+    _Class.prototype.handleAction = function(moduleName, path, options) {
+      return alert("" + moduleName + ":" + paht + ":" + options);
+    };
+
     _Class.prototype.registerModule = function(module) {
+      var route, _fn, _i, _len, _ref,
+        _this = this;
       if (module === void 0) {
         throw new Error("The module cannot be undefined");
       }
@@ -97,6 +88,18 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
         throw new Error("The module is already registered");
       }
       this.modules[module.name] = module;
+      alert("" + (module.routes()));
+      _ref = module.routes();
+      _fn = function(route) {
+        return _this.router.route(route, "" + module.name + ":" + route, function(options) {
+          alert("From router: " + module.name + ":" + route);
+          return _this.handleAction(module.name, route, options);
+        });
+      };
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        route = _ref[_i];
+        _fn(route);
+      }
       return this.listenTo(module, "action", this.action);
     };
 
@@ -112,11 +115,8 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
         return console.log("Application controller already started.");
       } else {
         this.application.start();
-        Backbone.history.start({
+        return Backbone.history.start({
           pushState: true
-        });
-        return $(window).bind("popstate", function(event) {
-          return alert(event.originalEvent.state);
         });
       }
     };
@@ -151,24 +151,17 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       if (this.name === void 0) {
         throw new Error("The name of the module must be defined");
       }
+      if (this.actions === void 0) {
+        throw new Error("At least one action must be defined");
+      }
       if (this.baseUrl === void 0) {
         this.baseUrl = "/" + (this.name.replace(/:/g, "/"));
-      }
-      if (this.routableActions === void 0) {
-        throw new Error("At least one routable action must be defined");
       }
       _.extend(this, Backbone.Events);
     }
 
-    _Class.prototype.getRoutableActions = function() {
-      return this.routableActions;
-    };
-
-    _Class.prototype.getActions = function() {
-      if (this.actions === void 0) {
-        throw new Error("No action are defined");
-      }
-      return this.actions;
+    _Class.prototype.routes = function() {
+      return _.pluck(_.values(this.actions), "path");
     };
 
     _Class.prototype.action = function(actionName, options) {
