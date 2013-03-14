@@ -7,8 +7,9 @@ Admin.Module = class
 
     _.extend @, Backbone.Events
 
-  routes: ->
-    _.pluck _.values(@actions), "path"
+#    for key, value of @actions
+#      @["_#{key}"] = (args) =>
+#        @trigger "action:done", @[key](args)
 
   action: (actionName, options) ->
     @trigger "action", actionName, options

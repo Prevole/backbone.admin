@@ -14,19 +14,60 @@ Admin.ApplicationController = class
 
     _.extend @, Backbone.Events
 
+    @listenTo @router, "route", @routeHandler
+
+  routeHandler: (route, params) ->
+    @action route, params
+
+#    @router = new (Backbone.Router.extend(
+#      initializer: (options) ->
+#        @controller = options.controller
+#
+#        @on "route", @actionHandler
+#
+#      actionHandler: (router, route, params) ->
+#        console.log route
+#        console.log arguments
+#
+#    ))(controller: @)
+
 #    @on "action", @action, @
 
   action: (action, options) ->
-#    alert action
-
     if action.match /.*:.*/g
       moduleName = action.replace /:.*/, ""
       actionName = action.replace /.*:/, ""
-      route = "#{moduleName}/#{actionName}"
     else
       moduleName = action
-#      actionName = "def"
-      route = moduleName
+      actionName = "main"
+
+    console.log "Options: #{options}"
+    console.log "Action: #{action}"
+    console.log "Action name: #{actionName}"
+    console.log "Module name: #{moduleName}"
+    console.log "Modules: #{@modules}"
+
+    module = @modules[moduleName]
+
+    console.log "Module: #{module}"
+
+    path = module.actions[actionName]
+
+    console.log "Path: #{path}"
+
+    unless actionName == "main"
+      unless options is undefined
+        path = path.replace ":#{module.modelIdentifier}", options.model.get(module.modelIdentifier)
+
+    console.log "Path replaced: #{path}"
+
+    result = module[actionName](options)
+
+    console.log "Result: #{result}"
+
+    for key in _.keys(result)
+      unless @application[key] is undefined
+        @application[key].show result[key]
 
 #    module = @modules[moduleName]
 
@@ -49,17 +90,30 @@ Admin.ApplicationController = class
 #          unless app[key] is undefined
 #            app[key].show result[key]
 #    )
-    @router.navigate("#{route}", {trigger: true})
 
-  handleAction: (moduleName, path, options) ->
-    alert "#{moduleName}:#{paht}:#{options}"
-#    result = module[module.getRoutableActions()[actionName]](options)
+#    alert "#{path}"
+
+    @router.navigate("/#{path}")
+
+#  handleAction: (moduleName, actionName, path, options) ->
+##    alert "#{moduleName}:#{actionName}:#{path}:#{options}"
+#
+#    module = @modules[moduleName]
+#
+#    return if module is undefined
+#
+#    result = module[actionName](options)
 #
 #    for key in _.keys(result)
-#      do (key) =>
-#        unless app[key] is undefined
-#          app[key].show result[key]
+#      unless @application[key] is undefined
+#        @application[key].show result[key]
 
+#  handleAction: (actionResult) ->
+##    result = action()
+#
+#    for key in _.keys(actionResult)
+#      unless @application[key] is undefined
+#        @application[key].show actionResult[key]
 
   registerModule: (module) ->
     throw new Error "The module cannot be undefined" if module is undefined
@@ -68,15 +122,39 @@ Admin.ApplicationController = class
 
     @modules[module.name] = module
 
-    alert "#{module.routes()}"
+    actions = _.chain(module.actions).pairs().sortBy(1).object().value()
 
-    for route in module.routes()
-      do (route) =>
-        @router.route route, "#{module.name}:#{route}", (options) =>
-          alert "From router: #{module.name}:#{route}"
-          @handleAction module.name, route, options
+#    actions = sortByValue module.actions
+
+    actionFn = @action
+
+    handlerBuilder = (action) ->
+      (options) ->
+        actionFn(action, options)
+
+    for actionName, path of actions
+      action = "#{module.name}:#{actionName}"
+      @router.route path, action
+#      , handlerBuilder(action)
+#      (options) =>
+#        alert action
+#        @action action, options
+
+#      , (args) =>
+#        @handleAction module.name, actionName, path, args
+
+#      @_registerRoute module, actionName, path
+
+#      (args) =>
+#        @handleAction module[actionName](args)
+
+#      (options) =>
+#        n = actionName
+#        p = path
+#        @handleAction module.name, n, p, options
 
     @listenTo module, "action", @action
+#    @listenTo module, "action:done", @handleAction
 
   registerRegion: (name, region) ->
     throw new Error "The region #{name} is already registered" unless @application[name] is undefined
@@ -90,6 +168,9 @@ Admin.ApplicationController = class
     else
       @application.start()
       Backbone.history.start(pushState: true)
+
+#  _registerRoute: (module, actionName, path) ->
+#    @router.route path, "#{module.name}:#{actionName}", module["_#{actionName}"]
 
 
 #  switchModule: (moduleName, changeUrl = true) ->

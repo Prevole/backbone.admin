@@ -1,41 +1,60 @@
 fruitsData = [
   {
+    id: 1
     name: "Banana"
   }, {
+    id: 2
     name: "Apple"
   }, {
+    id: 3
     name: "Peach"
   }, {
+    id: 4
     name: "Grape"
   }, {
+    id: 5
     name: "Grapefruits"
   }, {
+    id: 6
     name: "Lemon"
   }, {
+    id: 7
     name: "Orange"
   }, {
+    id: 8
     name: "Tomato"
   }, {
+    id: 9
     name: "Apricot"
   }, {
+    id: 10
     name: "Avocado"
   }, {
+    id: 11
     name: "Cherry"
   }, {
+    id: 12
     name: "Clementine"
   }, {
+    id: 13
     name: "Coconut"
   }, {
+    id: 14
     name: "Kumquat"
   }, {
+    id: 15
     name: "Lychee"
   }, {
+    id: 16
     name: "Melon"
   }, {
+    id: 17
     name: "Pear"
   }, {
+    id: 18
     name: "Pineapple"
   }, {
+    id: 19
     name: "Watermelon"
   }
 ]

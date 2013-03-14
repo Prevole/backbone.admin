@@ -18,7 +18,7 @@ BookModel = class extends DataModel
 # -----
 
 FruitModel = class extends DataModel
-  fields: ["name"]
+  fields: ["id", "name"]
 
 # -----
 
@@ -236,14 +236,11 @@ FruitGridLayout = Dg.createGridLayout(
 
 BooksModule = class extends Admin.Module
   name: "books"
+  modelIdentifier: "id"
 
   actions: {
-    main: {
-      path: "/books"
-    },
-    add: {
-      path: "/books/add"
-    }
+    main:   "books"
+    add:    "books/add"
   }
 
   main: ->
@@ -293,23 +290,19 @@ BooksModule = class extends Admin.Module
 
 FruitsModule = class extends Admin.Module
   name: "fruits"
+  modelIdentifier: "id"
+
 #  routableActions: {
 #    defaultAction: "defaultAction"
 #    add: "add"
 #    edit: "edit"
 #  }
 
-  actions: {
-    main: {
-      path: "/fruits"
-    },
-    add: {
-      path: "/fruits/add"
-    },
-    edit: {
-      path: "/fruits/edit/:id"
-    }
-  }
+  actions:
+    main:   "fruits"
+    add:    "fruits/add"
+    edit:   "fruits/edit/:id"
+
 
 #  routes: [
 #    {name: "default", url: "fruits"},

@@ -112,42 +112,61 @@ booksData = [
 
 fruitsData = [
   {
+    id: 1,
     name: "Banana"
   }, {
+    id: 2,
     name: "Apple"
   }, {
+    id: 3,
     name: "Peach"
   }, {
+    id: 4,
     name: "Grape"
   }, {
+    id: 5,
     name: "Grapefruits"
   }, {
+    id: 6,
     name: "Lemon"
   }, {
+    id: 7,
     name: "Orange"
   }, {
+    id: 8,
     name: "Tomato"
   }, {
+    id: 9,
     name: "Apricot"
   }, {
+    id: 10,
     name: "Avocado"
   }, {
+    id: 11,
     name: "Cherry"
   }, {
+    id: 12,
     name: "Clementine"
   }, {
+    id: 13,
     name: "Coconut"
   }, {
+    id: 14,
     name: "Kumquat"
   }, {
+    id: 15,
     name: "Lychee"
   }, {
+    id: 16,
     name: "Melon"
   }, {
+    id: 17,
     name: "Pear"
   }, {
+    id: 18,
     name: "Pineapple"
   }, {
+    id: 19,
     name: "Watermelon"
   }
 ];
@@ -196,7 +215,7 @@ FruitModel = (function(_super) {
     return _Class.__super__.constructor.apply(this, arguments);
   }
 
-  _Class.prototype.fields = ["name"];
+  _Class.prototype.fields = ["id", "name"];
 
   return _Class;
 
@@ -439,13 +458,11 @@ BooksModule = (function(_super) {
 
   _Class.prototype.name = "books";
 
+  _Class.prototype.modelIdentifier = "id";
+
   _Class.prototype.actions = {
-    main: {
-      path: "/books"
-    },
-    add: {
-      path: "/books/add"
-    }
+    main: "books",
+    add: "books/add"
   };
 
   _Class.prototype.main = function() {
@@ -486,16 +503,12 @@ FruitsModule = (function(_super) {
 
   _Class.prototype.name = "fruits";
 
+  _Class.prototype.modelIdentifier = "id";
+
   _Class.prototype.actions = {
-    main: {
-      path: "/fruits"
-    },
-    add: {
-      path: "/fruits/add"
-    },
-    edit: {
-      path: "/fruits/edit/:id"
-    }
+    main: "fruits",
+    add: "fruits/add",
+    edit: "fruits/edit/:id"
   };
 
   _Class.prototype.add = function() {
