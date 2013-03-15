@@ -67,11 +67,11 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
     }
 
     _Class.prototype.routeHandler = function(route, params) {
-      return this.action(route, params);
+      return this.executeAction(route, params);
     };
 
-    _Class.prototype.action = function(action, options) {
-      var actionName, key, module, moduleName, path, result, _i, _len, _ref;
+    _Class.prototype.executeAction = function(action, options) {
+      var actionName, key, module, moduleName, result, _i, _len, _ref, _results;
       if (action.match(/.*:.*/g)) {
         moduleName = action.replace(/:.*/, "");
         actionName = action.replace(/.*:/, "");
@@ -79,35 +79,43 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
         moduleName = action;
         actionName = "main";
       }
-      console.log("Options: " + options);
-      console.log("Action: " + action);
-      console.log("Action name: " + actionName);
-      console.log("Module name: " + moduleName);
-      console.log("Modules: " + this.modules);
       module = this.modules[moduleName];
-      console.log("Module: " + module);
+      result = module[actionName](options);
+      _ref = _.keys(result);
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        key = _ref[_i];
+        if (this.application[key] !== void 0) {
+          _results.push(this.application[key].show(result[key]));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    _Class.prototype.action = function(action, options) {
+      var actionName, module, moduleName, path;
+      if (action.match(/.*:.*/g)) {
+        moduleName = action.replace(/:.*/, "");
+        actionName = action.replace(/.*:/, "");
+      } else {
+        moduleName = action;
+        actionName = "main";
+      }
+      module = this.modules[moduleName];
       path = module.actions[actionName];
-      console.log("Path: " + path);
       if (actionName !== "main") {
         if (options !== void 0) {
           path = path.replace(":" + module.modelIdentifier, options.model.get(module.modelIdentifier));
         }
       }
-      console.log("Path replaced: " + path);
-      result = module[actionName](options);
-      console.log("Result: " + result);
-      _ref = _.keys(result);
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        key = _ref[_i];
-        if (this.application[key] !== void 0) {
-          this.application[key].show(result[key]);
-        }
-      }
+      this.executeAction(action, options);
       return this.router.navigate("/" + path);
     };
 
     _Class.prototype.registerModule = function(module) {
-      var action, actionFn, actionName, actions, handlerBuilder, path;
+      var action, actionName, actions, path;
       if (module === void 0) {
         throw new Error("The module cannot be undefined");
       }
@@ -119,12 +127,6 @@ Backbone.Admin = Admin = (function(Backbone, Marionette, _, $) {
       }
       this.modules[module.name] = module;
       actions = _.chain(module.actions).pairs().sortBy(1).object().value();
-      actionFn = this.action;
-      handlerBuilder = function(action) {
-        return function(options) {
-          return actionFn(action, options);
-        };
-      };
       for (actionName in actions) {
         path = actions[actionName];
         action = "" + module.name + ":" + actionName;

@@ -17,7 +17,7 @@ Admin.ApplicationController = class
     @listenTo @router, "route", @routeHandler
 
   routeHandler: (route, params) ->
-    @action route, params
+    @executeAction route, params
 
 #    @router = new (Backbone.Router.extend(
 #      initializer: (options) ->
@@ -33,6 +33,24 @@ Admin.ApplicationController = class
 
 #    @on "action", @action, @
 
+  executeAction: (action, options) ->
+    if action.match /.*:.*/g
+      moduleName = action.replace /:.*/, ""
+      actionName = action.replace /.*:/, ""
+    else
+      moduleName = action
+      actionName = "main"
+
+    module = @modules[moduleName]
+
+    result = module[actionName](options)
+
+    for key in _.keys(result)
+      unless @application[key] is undefined
+        @application[key].show result[key]
+
+
+
   action: (action, options) ->
     if action.match /.*:.*/g
       moduleName = action.replace /:.*/, ""
@@ -41,57 +59,15 @@ Admin.ApplicationController = class
       moduleName = action
       actionName = "main"
 
-    console.log "Options: #{options}"
-    console.log "Action: #{action}"
-    console.log "Action name: #{actionName}"
-    console.log "Module name: #{moduleName}"
-    console.log "Modules: #{@modules}"
-
     module = @modules[moduleName]
 
-    console.log "Module: #{module}"
-
     path = module.actions[actionName]
-
-    console.log "Path: #{path}"
 
     unless actionName == "main"
       unless options is undefined
         path = path.replace ":#{module.modelIdentifier}", options.model.get(module.modelIdentifier)
 
-    console.log "Path replaced: #{path}"
-
-    result = module[actionName](options)
-
-    console.log "Result: #{result}"
-
-    for key in _.keys(result)
-      unless @application[key] is undefined
-        @application[key].show result[key]
-
-#    module = @modules[moduleName]
-
-#    result = module[module.getRoutableActions()[actionName]](options)
-#
-#    for key in _.keys(result)
-#      do (key) =>
-#        unless @application[key] is undefined
-#          @application[key].show result[key]
-
-#    app = @application
-
-#    @router.route(route, action, ->
-#      alert "action:#{action}:#{route}"
-#
-#      result = module[module.getRoutableActions()[actionName]](options)
-#
-#      for key in _.keys(result)
-#        do (key) =>
-#          unless app[key] is undefined
-#            app[key].show result[key]
-#    )
-
-#    alert "#{path}"
+    @executeAction action, options
 
     @router.navigate("/#{path}")
 
@@ -120,41 +96,20 @@ Admin.ApplicationController = class
     throw new Error "The module must be from Admin.Module type" unless module instanceof Admin.Module
     throw new Error "The module is already registered" unless @modules[module.name] is undefined
 
+    # Register the module
     @modules[module.name] = module
 
+    # Get all the actions declared in the module and prepare them to create the related routes
+    # TODO: Be sure to differentiate the routable and the non-routable actions (delete should not be a routable action)
     actions = _.chain(module.actions).pairs().sortBy(1).object().value()
 
-#    actions = sortByValue module.actions
-
-    actionFn = @action
-
-    handlerBuilder = (action) ->
-      (options) ->
-        actionFn(action, options)
-
+    # Register the routes in the router without any callback. Callbacks are done via the route event.
     for actionName, path of actions
       action = "#{module.name}:#{actionName}"
       @router.route path, action
-#      , handlerBuilder(action)
-#      (options) =>
-#        alert action
-#        @action action, options
 
-#      , (args) =>
-#        @handleAction module.name, actionName, path, args
-
-#      @_registerRoute module, actionName, path
-
-#      (args) =>
-#        @handleAction module[actionName](args)
-
-#      (options) =>
-#        n = actionName
-#        p = path
-#        @handleAction module.name, n, p, options
-
+    # Liste the event action on each module registered
     @listenTo module, "action", @action
-#    @listenTo module, "action:done", @handleAction
 
   registerRegion: (name, region) ->
     throw new Error "The region #{name} is already registered" unless @application[name] is undefined
