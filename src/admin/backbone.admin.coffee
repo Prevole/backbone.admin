@@ -22,7 +22,7 @@ an implementation based on other views and tags.
 
 A default collection is also provided to work with the `Dg` plugin.
 ###
-Backbone.Admin = Admin = ( (Backbone, Marionette, _, $) ->
+window.Backbone.Admin = window.Admin = ( (Backbone, Marionette, _, $) ->
   Admin = { version: "0.0.1" }
 
   applicationStarted = false

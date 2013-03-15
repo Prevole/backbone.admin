@@ -1,3 +1,28 @@
+Action = class
+  actionName: "main"
+  actionDetails: null
+
+  constructor: (action) ->
+    throw new Error "The module name must be defined" if action is undefined or action.length == 0
+
+    # Get all the parts of the action
+    actionParts = action.split ":"
+
+    # Get the module name
+    @moduleName = actionParts[0]
+
+    # Get the action name or define a default one
+    @actionName = actionParts[1] unless actionParts[1] is undefined
+
+    # Remaining elements
+    @actionDetails = actionParts[2] unless actionParts[2] is undefined
+
+  path: (module) ->
+    if @actionDetails is undefined
+      "#{module.actions[@actionName]}"
+    else
+      "#{module.actions[@actionName]}/#{@actionDetails}"
+
 # The main controller to rule the application on the client side
 Admin.ApplicationController = class
   modules: {}
@@ -16,8 +41,8 @@ Admin.ApplicationController = class
 
     @listenTo @router, "route", @routeHandler
 
-  routeHandler: (route, params) ->
-    @executeAction route, params
+  routeHandler: (action, params) ->
+    @executeAction new Action(action), params
 
 #    @router = new (Backbone.Router.extend(
 #      initializer: (options) ->
@@ -33,17 +58,10 @@ Admin.ApplicationController = class
 
 #    @on "action", @action, @
 
-  executeAction: (action, options) ->
-    if action.match /.*:.*/g
-      moduleName = action.replace /:.*/, ""
-      actionName = action.replace /.*:/, ""
-    else
-      moduleName = action
-      actionName = "main"
+  executeAction: (actionDescription, options) ->
+    module = @modules[actionDescription.moduleName]
 
-    module = @modules[moduleName]
-
-    result = module[actionName](options)
+    result = module[actionDescription.actionName](options)
 
     for key in _.keys(result)
       unless @application[key] is undefined
@@ -52,22 +70,18 @@ Admin.ApplicationController = class
 
 
   action: (action, options) ->
-    if action.match /.*:.*/g
-      moduleName = action.replace /:.*/, ""
-      actionName = action.replace /.*:/, ""
-    else
-      moduleName = action
-      actionName = "main"
+    actionDescription = new Action(action)
 
-    module = @modules[moduleName]
+    module = @modules[actionDescription.moduleName]
 
-    path = module.actions[actionName]
+    path = actionDescription.path(module)
+#      module.actions[actionDescription.actionName]
 
-    unless actionName == "main"
-      unless options is undefined
-        path = path.replace ":#{module.modelIdentifier}", options.model.get(module.modelIdentifier)
+#    unless actionName == "main"
+#      unless options is undefined
+#        path = path.replace ":#{module.modelIdentifier}", options.model.get(module.modelIdentifier)
 
-    @executeAction action, options
+    @executeAction actionDescription, options
 
     @router.navigate("/#{path}")
 

@@ -333,10 +333,17 @@ FruitsModule = class extends Admin.Module
 
   edit: (options) ->
     self = @
+
+    if options.model is undefined
+      model = fruits.filter((fruit) ->
+        "#{fruit.get('id')}" == options[0]
+      )[0]
+    else
+      model = options.model
+
     EditFruitView = Marionette.ItemView.extend
       template: "#editFruitForm"
-      model: options.model
-#      collection: fruits
+      model: model
 
       events:
         "click button": "editFruit"
@@ -364,7 +371,7 @@ FruitsModule = class extends Admin.Module
       @action "fruits:add"
 
     @listenTo fruitLayout, "edit", (model) =>
-      @action "fruits:edit", {model: model}
+      @action "fruits:edit:#{model.get("id")}", model: model
 
     r1: fruitLayout
 
