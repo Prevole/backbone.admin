@@ -461,7 +461,7 @@
 
     _Class.prototype.modelIdentifier = "id";
 
-    _Class.prototype.actions = {
+    _Class.prototype.routableActions = {
       main: "books",
       add: "books/add"
     };
@@ -506,7 +506,7 @@
 
     _Class.prototype.modelIdentifier = "id";
 
-    _Class.prototype.actions = {
+    _Class.prototype.routableActions = {
       main: "fruits",
       add: "fruits/add",
       edit: "fruits/edit/:id"
@@ -529,7 +529,7 @@
           fruitModels.push(new FruitModel({
             name: this.ui.fruitName.val()
           }));
-          return self.action("fruits");
+          return self.routableAction("main");
         }
       });
       return {
@@ -541,9 +541,7 @@
       var EditFruitView, model, self;
       self = this;
       if (options.model === void 0) {
-        model = fruits.filter(function(fruit) {
-          return ("" + (fruit.get('id'))) === options[0];
-        })[0];
+        model = fruits.get(options[0]);
       } else {
         model = options.model;
       }
@@ -559,7 +557,7 @@
         editFruit: function(event) {
           event.preventDefault();
           options.model.set("name", this.ui.fruitName.val());
-          return self.action("fruits");
+          return self.routableAction("main");
         },
         onRender: function() {
           return this.ui.fruitName.val(this.model.get("name"));
@@ -575,10 +573,12 @@
         _this = this;
       fruitLayout = new FruitGridLayout();
       this.listenTo(fruitLayout, "new", function() {
-        return _this.action("fruits:add");
+        return _this.routableAction("add");
       });
       this.listenTo(fruitLayout, "edit", function(model) {
-        return _this.action("fruits:edit:" + (model.get("id")), {
+        return _this.routableAction("edit", {
+          id: model.get("id")
+        }, {
           model: model
         });
       });
@@ -637,7 +637,7 @@
     var appController, navigationView, region1, region2;
     appController = new Admin.ApplicationController(new Marionette.Application());
     navigationView = new NavigationView();
-    appController.listenTo(navigationView, "action", appController.action);
+    appController.listenTo(navigationView, "action", appController.routeAction);
     appController.registerModule(new BooksModule());
     appController.registerModule(new FruitsModule());
     region1 = new Region1();

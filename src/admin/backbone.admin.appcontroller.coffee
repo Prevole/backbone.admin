@@ -1,27 +1,3 @@
-Action = class
-  actionName: "main"
-  actionDetails: null
-
-  constructor: (action) ->
-    throw new Error "The module name must be defined" if action is undefined or action.length == 0
-
-    # Get all the parts of the action
-    actionParts = action.split ":"
-
-    # Get the module name
-    @moduleName = actionParts[0]
-
-    # Get the action name or define a default one
-    @actionName = actionParts[1] unless actionParts[1] is undefined
-
-    # Remaining elements
-    @actionDetails = actionParts[2] unless actionParts[2] is undefined
-
-  path: (module) ->
-    if @actionDetails is undefined
-      "#{module.actions[@actionName]}"
-    else
-      "#{module.actions[@actionName]}/#{@actionDetails}"
 
 # The main controller to rule the application on the client side
 Admin.ApplicationController = class
@@ -39,10 +15,26 @@ Admin.ApplicationController = class
 
     _.extend @, Backbone.Events
 
-    @listenTo @router, "route", @routeHandler
+    @on "action:done", @actionDone
+    @listenTo @router, "route", @routedAction
 
-  routeHandler: (action, params) ->
-    @executeAction new Action(action), params
+  routedAction: (action, params) ->
+    actionParts = action.split(":")
+
+    module = @modules[actionParts[0]]
+
+    return if module is undefined
+
+    @action ActionFactory.action(module, actionParts[1]), params
+
+  routeAction: (action, params) ->
+    actionParts = action.split(":")
+
+    module = @modules[actionParts[0]]
+
+    return if module is undefined
+
+    @action ActionFactory.routableAction(module, actionParts[1]), params
 
 #    @router = new (Backbone.Router.extend(
 #      initializer: (options) ->
@@ -58,33 +50,40 @@ Admin.ApplicationController = class
 
 #    @on "action", @action, @
 
-  executeAction: (actionDescription, options) ->
-    module = @modules[actionDescription.moduleName]
-
-    result = module[actionDescription.actionName](options)
+  action: (action, options) ->
+    result = action.module[action.actionName](options)
 
     for key in _.keys(result)
       unless @application[key] is undefined
         @application[key].show result[key]
 
+    @trigger "action:done", action, options
+#  routableAction: (actionDescription, options) ->
 
 
-  action: (action, options) ->
-    actionDescription = new Action(action)
+#  action: (action, options) ->
+#    @executeAction action, options
+#    @trigger "action:done"
 
-    module = @modules[actionDescription.moduleName]
 
-    path = actionDescription.path(module)
+  actionDone: (action, options) ->
+    @router.navigate action.path() if action.isRoutable
+
+#    actionDescription = new Action(action)
+#
+#    module = @modules[actionDescription.moduleName]
+#
+#    path = actionDescription.path(module)
 #      module.actions[actionDescription.actionName]
-
+#
 #    unless actionName == "main"
 #      unless options is undefined
 #        path = path.replace ":#{module.modelIdentifier}", options.model.get(module.modelIdentifier)
-
-    @executeAction actionDescription, options
-
-    @router.navigate("/#{path}")
-
+#
+#    @executeAction actionDescription, options
+#
+#    @router.navigate("/#{path}")
+#
 #  handleAction: (moduleName, actionName, path, options) ->
 ##    alert "#{moduleName}:#{actionName}:#{path}:#{options}"
 #
@@ -97,7 +96,7 @@ Admin.ApplicationController = class
 #    for key in _.keys(result)
 #      unless @application[key] is undefined
 #        @application[key].show result[key]
-
+#
 #  handleAction: (actionResult) ->
 ##    result = action()
 #
@@ -115,12 +114,12 @@ Admin.ApplicationController = class
 
     # Get all the actions declared in the module and prepare them to create the related routes
     # TODO: Be sure to differentiate the routable and the non-routable actions (delete should not be a routable action)
-    actions = _.chain(module.actions).pairs().sortBy(1).object().value()
+    actions = _.chain(module.routableActions).pairs().sortBy(1).object().value()
 
     # Register the routes in the router without any callback. Callbacks are done via the route event.
     for actionName, path of actions
-      action = "#{module.name}:#{actionName}"
-      @router.route path, action
+      moduleActionName = "#{module.name}:#{actionName}"
+      @router.route path, moduleActionName
 
     # Liste the event action on each module registered
     @listenTo module, "action", @action

@@ -30,7 +30,7 @@ A default collection is also provided to work with the `Dg` plugin.
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   window.Backbone.Admin = window.Admin = (function(Backbone, Marionette, _, $) {
-    var Action, Admin, applicationStarted, authorizator, gvent, i18nKeys, initialized, moduleNamePattern, sortByValue;
+    var Action, ActionFactory, Admin, applicationStarted, authorizator, gvent, i18nKeys, initialized, moduleNamePattern, sortByValue;
     Admin = {
       version: "0.0.1"
     };
@@ -50,36 +50,61 @@ A default collection is also provided to work with the `Dg` plugin.
     };
     Action = (function() {
 
+      _Class.prototype.module = null;
+
       _Class.prototype.actionName = "main";
 
-      _Class.prototype.actionDetails = null;
+      _Class.prototype.pathParameters = {};
 
-      function _Class(action) {
-        var actionParts;
-        if (action === void 0 || action.length === 0) {
-          throw new Error("The module name must be defined");
+      _Class.prototype.isRoutable = false;
+
+      function _Class(isRoutable, module, actionName, pathParameters) {
+        this.isRoutable = isRoutable;
+        this.module = module;
+        if (this.module === void 0) {
+          throw new Error("The module must be defined");
         }
-        actionParts = action.split(":");
-        this.moduleName = actionParts[0];
-        if (actionParts[1] !== void 0) {
-          this.actionName = actionParts[1];
+        this.moduleName = this.module.name;
+        if (actionName !== void 0) {
+          this.actionName = actionName;
         }
-        if (actionParts[2] !== void 0) {
-          this.actionDetails = actionParts[2];
+        if (pathParameters !== void 0) {
+          this.pathParameters = pathParameters;
         }
       }
 
-      _Class.prototype.path = function(module) {
-        if (this.actionDetails === void 0) {
-          return "" + module.actions[this.actionName];
-        } else {
-          return "" + module.actions[this.actionName] + "/" + this.actionDetails;
+      _Class.prototype.path = function() {
+        var key, path, value, _ref;
+        if (this.module.routableActions[this.actionName] === void 0) {
+          return;
         }
+        path = this.module.routableActions[this.actionName];
+        _ref = this.pathParameters;
+        for (key in _ref) {
+          value = _ref[key];
+          path = path.replace(":" + key, value);
+        }
+        return path;
       };
 
       return _Class;
 
     })();
+    ActionFactory = new ((function() {
+
+      function _Class() {}
+
+      _Class.prototype.routableAction = function(module, actionName, pathParameters) {
+        return new Action(true, module, actionName, pathParameters);
+      };
+
+      _Class.prototype.action = function(module, actionName) {
+        return new Action(false, module, actionName, {});
+      };
+
+      return _Class;
+
+    })())();
     Admin.ApplicationController = (function() {
 
       _Class.prototype.modules = {};
@@ -97,41 +122,51 @@ A default collection is also provided to work with the `Dg` plugin.
         }
         this.application = application;
         _.extend(this, Backbone.Events);
-        this.listenTo(this.router, "route", this.routeHandler);
+        this.on("action:done", this.actionDone);
+        this.listenTo(this.router, "route", this.routedAction);
       }
 
-      _Class.prototype.routeHandler = function(action, params) {
-        return this.executeAction(new Action(action), params);
+      _Class.prototype.routedAction = function(action, params) {
+        var actionParts, module;
+        actionParts = action.split(":");
+        module = this.modules[actionParts[0]];
+        if (module === void 0) {
+          return;
+        }
+        return this.action(ActionFactory.action(module, actionParts[1]), params);
       };
 
-      _Class.prototype.executeAction = function(actionDescription, options) {
-        var key, module, result, _i, _len, _ref, _results;
-        module = this.modules[actionDescription.moduleName];
-        result = module[actionDescription.actionName](options);
-        _ref = _.keys(result);
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          key = _ref[_i];
-          if (this.application[key] !== void 0) {
-            _results.push(this.application[key].show(result[key]));
-          } else {
-            _results.push(void 0);
-          }
+      _Class.prototype.routeAction = function(action, params) {
+        var actionParts, module;
+        actionParts = action.split(":");
+        module = this.modules[actionParts[0]];
+        if (module === void 0) {
+          return;
         }
-        return _results;
+        return this.action(ActionFactory.routableAction(module, actionParts[1]), params);
       };
 
       _Class.prototype.action = function(action, options) {
-        var actionDescription, module, path;
-        actionDescription = new Action(action);
-        module = this.modules[actionDescription.moduleName];
-        path = actionDescription.path(module);
-        this.executeAction(actionDescription, options);
-        return this.router.navigate("/" + path);
+        var key, result, _i, _len, _ref;
+        result = action.module[action.actionName](options);
+        _ref = _.keys(result);
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          key = _ref[_i];
+          if (this.application[key] !== void 0) {
+            this.application[key].show(result[key]);
+          }
+        }
+        return this.trigger("action:done", action, options);
+      };
+
+      _Class.prototype.actionDone = function(action, options) {
+        if (action.isRoutable) {
+          return this.router.navigate(action.path());
+        }
       };
 
       _Class.prototype.registerModule = function(module) {
-        var action, actionName, actions, path;
+        var actionName, actions, moduleActionName, path;
         if (module === void 0) {
           throw new Error("The module cannot be undefined");
         }
@@ -142,11 +177,11 @@ A default collection is also provided to work with the `Dg` plugin.
           throw new Error("The module is already registered");
         }
         this.modules[module.name] = module;
-        actions = _.chain(module.actions).pairs().sortBy(1).object().value();
+        actions = _.chain(module.routableActions).pairs().sortBy(1).object().value();
         for (actionName in actions) {
           path = actions[actionName];
-          action = "" + module.name + ":" + actionName;
-          this.router.route(path, action);
+          moduleActionName = "" + module.name + ":" + actionName;
+          this.router.route(path, moduleActionName);
         }
         return this.listenTo(module, "action", this.action);
       };
@@ -199,8 +234,8 @@ A default collection is also provided to work with the `Dg` plugin.
         if (this.name === void 0) {
           throw new Error("The name of the module must be defined");
         }
-        if (this.actions === void 0) {
-          throw new Error("At least one action must be defined");
+        if (this.routableActions === void 0) {
+          throw new Error("At least one routable action must be defined");
         }
         if (this.baseUrl === void 0) {
           this.baseUrl = "/" + (this.name.replace(/:/g, "/"));
@@ -208,8 +243,12 @@ A default collection is also provided to work with the `Dg` plugin.
         _.extend(this, Backbone.Events);
       }
 
+      _Class.prototype.routableAction = function(actionName, pathParameters, options) {
+        return this.trigger("action", ActionFactory.routableAction(this, actionName, pathParameters), options);
+      };
+
       _Class.prototype.action = function(actionName, options) {
-        return this.trigger("action", actionName, options);
+        return this.trigger("action", ActionFactory.action(this, actionName), options);
       };
 
       initGridLayoutClass = function(gridLayoutClass) {};

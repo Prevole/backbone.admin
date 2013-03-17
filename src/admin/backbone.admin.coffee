@@ -43,6 +43,8 @@ window.Backbone.Admin = window.Admin = ( (Backbone, Marionette, _, $) ->
   # backbone.admin.modulecontroller.coffee
 
   #= backbone.admin.utils.coffee
+  #= backbone.admin.action.coffee
+  #= backbone.admin.actionfactory.coffee
   #= backbone.admin.appcontroller.coffee
   #= backbone.admin.navigationview.coffee
   #= backbone.admin.module.coffee

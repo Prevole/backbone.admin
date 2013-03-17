@@ -147,7 +147,7 @@ fruitHeaderTemplate = (data) ->
 
 fruitRowTemplate = (data) ->
   "<td>#{data.name}</td>" +
-  "<td><button class=\"edit btn btn-small\">Update</button></td>"
+  "<td><button class=\"edit btn btn-small\">Update</button><button class=\"delete btn btn-small\">Delete</button></td>"
 
 # -----
 
@@ -238,10 +238,9 @@ BooksModule = class extends Admin.Module
   name: "books"
   modelIdentifier: "id"
 
-  actions: {
+  routableActions:
     main:   "books"
     add:    "books/add"
-  }
 
   main: ->
     r1: new BookGridLayout()
@@ -298,7 +297,7 @@ FruitsModule = class extends Admin.Module
 #    edit: "edit"
 #  }
 
-  actions:
+  routableActions:
     main:   "fruits"
     add:    "fruits/add"
     edit:   "fruits/edit/:id"
@@ -327,7 +326,7 @@ FruitsModule = class extends Admin.Module
 
         fruitModels.push new FruitModel({name: @ui.fruitName.val()})
 
-        self.action("fruits")
+        self.routableAction("main")
 
     r1: new AddFruitView()
 
@@ -335,9 +334,7 @@ FruitsModule = class extends Admin.Module
     self = @
 
     if options.model is undefined
-      model = fruits.filter((fruit) ->
-        "#{fruit.get('id')}" == options[0]
-      )[0]
+      model = fruits.get options[0]
     else
       model = options.model
 
@@ -357,7 +354,7 @@ FruitsModule = class extends Admin.Module
         options.model.set("name", @ui.fruitName.val())
 #        fruitModels.push new FruitModel({name: @ui.fruitName.val()})
 
-        self.action("fruits")
+        self.routableAction("main")
 
       onRender: ->
         @ui.fruitName.val(@model.get("name"))
@@ -368,10 +365,10 @@ FruitsModule = class extends Admin.Module
     fruitLayout = new FruitGridLayout()
 
     @listenTo fruitLayout, "new", =>
-      @action "fruits:add"
+      @routableAction "add"
 
     @listenTo fruitLayout, "edit", (model) =>
-      @action "fruits:edit:#{model.get("id")}", model: model
+      @routableAction "edit", {id: model.get("id")}, {model: model}
 
     r1: fruitLayout
 
@@ -404,7 +401,7 @@ $(document).ready ->
 
   navigationView = new NavigationView()
 
-  appController.listenTo navigationView, "action", appController.action
+  appController.listenTo navigationView, "action", appController.routeAction
 
   appController.registerModule(new BooksModule())
   appController.registerModule(new FruitsModule())
