@@ -100,7 +100,7 @@ module.exports = (grunt) ->
           'demo/js/backbone.eventbinder.js'
           'demo/js/backbone.wreqr.js'
           'demo/js/backbone.marionette.js'
-          'demo/js/backbone.admin.js'
+          'dist/std/backbone.admin.js'
         ]
         options:
           helpers: 'spec/javascripts/helpers/*.js'

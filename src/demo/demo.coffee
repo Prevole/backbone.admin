@@ -147,7 +147,8 @@ fruitHeaderTemplate = (data) ->
 
 fruitRowTemplate = (data) ->
   "<td>#{data.name}</td>" +
-  "<td><button class=\"edit btn btn-small\">Update</button><button class=\"delete btn btn-small\">Delete</button></td>"
+  "<td><button class=\"edit btn btn-small\">Update</button>&nbsp;" +
+  "<button class=\"delete btn btn-small\">Delete</button></td>"
 
 # -----
 
@@ -289,25 +290,11 @@ BooksModule = class extends Admin.Module
 
 FruitsModule = class extends Admin.Module
   name: "fruits"
-  modelIdentifier: "id"
-
-#  routableActions: {
-#    defaultAction: "defaultAction"
-#    add: "add"
-#    edit: "edit"
-#  }
 
   routableActions:
     main:   "fruits"
     add:    "fruits/add"
     edit:   "fruits/edit/:id"
-
-
-#  routes: [
-#    {name: "default", url: "fruits"},
-#    {name: "add", url: "fruits/new"},
-#    {name: "edit", url: "fruits/edit/:id"}
-#  ]
 
   add: ->
     self = @
@@ -361,6 +348,14 @@ FruitsModule = class extends Admin.Module
 
     r1: new EditFruitView()
 
+  delete: (options) ->
+    fruitModels = _.reject fruitModels, (fruit) ->
+      fruit.get("id") == options.model.get("id")
+
+#    @routableAction "main"
+#    @main()
+    fruits.refresh()
+
   main: ->
     fruitLayout = new FruitGridLayout()
 
@@ -369,6 +364,9 @@ FruitsModule = class extends Admin.Module
 
     @listenTo fruitLayout, "edit", (model) =>
       @routableAction "edit", {id: model.get("id")}, {model: model}
+
+    @listenTo fruitLayout, "delete", (model) =>
+      @action "delete", {model: model}
 
     r1: fruitLayout
 

@@ -366,7 +366,7 @@
   };
 
   fruitRowTemplate = function(data) {
-    return ("<td>" + data.name + "</td>") + "<td><button class=\"edit btn btn-small\">Update</button></td>";
+    return ("<td>" + data.name + "</td>") + "<td><button class=\"edit btn btn-small\">Update</button>&nbsp;" + "<button class=\"delete btn btn-small\">Delete</button></td>";
   };
 
   BookHeaderView = (function(_super) {
@@ -504,8 +504,6 @@
 
     _Class.prototype.name = "fruits";
 
-    _Class.prototype.modelIdentifier = "id";
-
     _Class.prototype.routableActions = {
       main: "fruits",
       add: "fruits/add",
@@ -568,6 +566,13 @@
       };
     };
 
+    _Class.prototype["delete"] = function(options) {
+      fruitModels = _.reject(fruitModels, function(fruit) {
+        return fruit.get("id") === options.model.get("id");
+      });
+      return fruits.refresh();
+    };
+
     _Class.prototype.main = function() {
       var fruitLayout,
         _this = this;
@@ -579,6 +584,11 @@
         return _this.routableAction("edit", {
           id: model.get("id")
         }, {
+          model: model
+        });
+      });
+      this.listenTo(fruitLayout, "delete", function(model) {
+        return _this.action("delete", {
           model: model
         });
       });
