@@ -237,15 +237,16 @@ FruitGridLayout = Dg.createGridLayout(
 
 BooksModule = class extends Admin.Module
   name: "books"
-  modelIdentifier: "id"
 
   routableActions:
     main:   "books"
     add:    "books/add"
 
   main: ->
-    r1: new BookGridLayout()
-
+    {
+      r1: new BookGridLayout()
+      r2: new BookGridLayout()
+    }
 #    Test = Backbone.View.extend
 #      events:
 #        "click [data-action]": "action"

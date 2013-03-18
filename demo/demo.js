@@ -459,8 +459,6 @@
 
     _Class.prototype.name = "books";
 
-    _Class.prototype.modelIdentifier = "id";
-
     _Class.prototype.routableActions = {
       main: "books",
       add: "books/add"
@@ -468,7 +466,8 @@
 
     _Class.prototype.main = function() {
       return {
-        r1: new BookGridLayout()
+        r1: new BookGridLayout(),
+        r2: new BookGridLayout()
       };
     };
 

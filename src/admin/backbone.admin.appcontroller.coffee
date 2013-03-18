@@ -2,6 +2,7 @@
 # The main controller to rule the application on the client side
 Admin.ApplicationController = class
   modules: {}
+  regionNames: []
 
   router: new Backbone.Router()
 
@@ -52,6 +53,9 @@ Admin.ApplicationController = class
 
   action: (action, options) ->
     result = action.module[action.actionName](options)
+
+    for name in @regionNames
+      @application[name].close()
 
     for key in _.keys(result)
       unless @application[key] is undefined
@@ -129,6 +133,7 @@ Admin.ApplicationController = class
 
 #    @regions[name] = region
     @application[name] = region
+    @regionNames.push name
 
   start: ->
     if @started

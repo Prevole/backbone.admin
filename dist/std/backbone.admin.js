@@ -1,27 +1,41 @@
 
 /*
-Datagrid
-========
+Backbone.Admin
+==============
 
-The Datagrid plugin for `Bacbkone` gives the possibility to implement
-easily a data table into a `Bacbkone` application. It uses `Backbone.Marionette`
-and its different views to reach the features of the data table.
+The `Backbone.Admin` framework based one `Backbone` and `Backbone.Marionette` offers an easy way
+to write client side `CRUD` application with a `REST` backend. But, the framework can be used to
+write different modules than `CRUD`modules. Custom modules can be handle perfectly by the framework.
 
 Dependencies:
 
-- [jQuery 1.8.2](http://jquery.com)
+- [jQuery 1.9.0](http://jquery.com)
 - [JSON2 2011-10-19](http://www.JSON.org/json2.js)
-- [Underscore 1.4.2](http://underscorejs.org)
-- [Backbone 0.9.2](http://backbonejs.org)
-- [Backbone.Marionette 1.0.0-beta1](http://github.com/marionettejs/backbone.marionette)
-- [Backbone.EventBinder 0.0.0](http://github.com/marionettejs/backbone.eventbinder)
-- [Backbone.Wreqr 0.0.0](http://github.com/marionettejs/backbone.wreqr)
+- [Underscore 1.4.3](http://underscorejs.org)
+- [Backbone 0.9.10](http://backbonejs.org)
+- [Backbone.Marionette 1.0.0-rc3](http://github.com/marionettejs/backbone.marionette)
+- [Backbone.Wreqr 0.1.0](http://github.com/marionettejs/backbone.wreqr)
+- [Backbone.Babysitter 0.0.4](http://github.com/marionettejs/backbone.babysitter)
 
-By default, a complete implementation based on `<table />` HTML tag is
-provided but all the views can be overrided quickly and easily to create
-an implementation based on other views and tags.
+For the demo, the `Backbone.Dg` is used to render the grids
 
-A default collection is also provided to work with the `Dg` plugin.
+- [Backbone.Dg 0.0.1](http://github.com/prevole/backgone.dg)
+
+By default, a `CRUD` module implementation is available with standards actions like `new`, `edit` and `delete`
+operations. The `list` action is the `main` action that will be used by default when no action is specified.
+
+The management of the browser history is done through the `Backbone.history` API. When the `Admin.ApplicationController`
+is started, the `History` is also started. Each module registered will also register `routes` in a `Backbone.Router`
+handled by the `Admin.ApplicationController`. By default, a `CRUD` module is bind to three `routes`:
+
+- `<moduleName>`: which goes to the main action
+- `<moduleName>/new`: which goes to the action that allows creating a new item
+- `<moduleName>/edit/:id`: which goes to the edition action to update the item
+
+These routes are `bookmarkable` and then can be reach through a the navigation bar of the browser. For the `delete`
+action, this is not the same scenario. Once a record is deleted, the resource is no more available on the server and
+then the route to reach should not be available anymore. This is the reason why there is no default route offered for
+`delete` action.
 */
 
 
@@ -30,7 +44,7 @@ A default collection is also provided to work with the `Dg` plugin.
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   window.Backbone.Admin = window.Admin = (function(Backbone, Marionette, _, $) {
-    var Action, ActionFactory, Admin, applicationStarted, authorizator, gvent, i18nKeys, initialized, moduleNamePattern, sortByValue;
+    var Action, ActionFactory, Admin, applicationStarted, authorizator, gvent, i18nKeys, initialized, moduleNamePattern;
     Admin = {
       version: "0.0.1"
     };
@@ -39,15 +53,6 @@ A default collection is also provided to work with the `Dg` plugin.
     moduleNamePattern = new RegExp(/[a-z]+(:[a-z]+)*/);
     gvent = new Marionette.EventAggregator();
     authorizator = null;
-    sortByValue = function(object) {
-      var tuples;
-      tuples = _.map(object, function(value, key) {
-        return [key, value];
-      });
-      return _.sortBy(tuples, function(tuple) {
-        return tuple[1];
-      });
-    };
     Action = (function() {
 
       _Class.prototype.module = null;
@@ -109,6 +114,8 @@ A default collection is also provided to work with the `Dg` plugin.
 
       _Class.prototype.modules = {};
 
+      _Class.prototype.regionNames = [];
+
       _Class.prototype.router = new Backbone.Router();
 
       _Class.prototype.started = false;
@@ -147,11 +154,16 @@ A default collection is also provided to work with the `Dg` plugin.
       };
 
       _Class.prototype.action = function(action, options) {
-        var key, result, _i, _len, _ref;
+        var key, name, result, _i, _j, _len, _len1, _ref, _ref1;
         result = action.module[action.actionName](options);
-        _ref = _.keys(result);
+        _ref = this.regionNames;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          key = _ref[_i];
+          name = _ref[_i];
+          this.application[name].close();
+        }
+        _ref1 = _.keys(result);
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          key = _ref1[_j];
           if (this.application[key] !== void 0) {
             this.application[key].show(result[key]);
           }
@@ -190,7 +202,8 @@ A default collection is also provided to work with the `Dg` plugin.
         if (this.application[name] !== void 0) {
           throw new Error("The region " + name + " is already registered");
         }
-        return this.application[name] = region;
+        this.application[name] = region;
+        return this.regionNames.push(name);
       };
 
       _Class.prototype.start = function() {

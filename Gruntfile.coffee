@@ -97,7 +97,6 @@ module.exports = (grunt) ->
           'demo/js/underscore.js'
           'demo/js/backbone.js'
           'demo/js/backbone.babysitter.js'
-          'demo/js/backbone.eventbinder.js'
           'demo/js/backbone.wreqr.js'
           'demo/js/backbone.marionette.js'
           'dist/std/backbone.admin.js'

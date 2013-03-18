@@ -1,26 +1,40 @@
 ###
-Datagrid
-========
+Backbone.Admin
+==============
 
-The Datagrid plugin for `Bacbkone` gives the possibility to implement
-easily a data table into a `Bacbkone` application. It uses `Backbone.Marionette`
-and its different views to reach the features of the data table.
+The `Backbone.Admin` framework based one `Backbone` and `Backbone.Marionette` offers an easy way
+to write client side `CRUD` application with a `REST` backend. But, the framework can be used to
+write different modules than `CRUD`modules. Custom modules can be handle perfectly by the framework.
 
 Dependencies:
 
-- [jQuery 1.8.2](http://jquery.com)
+- [jQuery 1.9.0](http://jquery.com)
 - [JSON2 2011-10-19](http://www.JSON.org/json2.js)
-- [Underscore 1.4.2](http://underscorejs.org)
-- [Backbone 0.9.2](http://backbonejs.org)
-- [Backbone.Marionette 1.0.0-beta1](http://github.com/marionettejs/backbone.marionette)
-- [Backbone.EventBinder 0.0.0](http://github.com/marionettejs/backbone.eventbinder)
-- [Backbone.Wreqr 0.0.0](http://github.com/marionettejs/backbone.wreqr)
+- [Underscore 1.4.3](http://underscorejs.org)
+- [Backbone 0.9.10](http://backbonejs.org)
+- [Backbone.Marionette 1.0.0-rc3](http://github.com/marionettejs/backbone.marionette)
+- [Backbone.Wreqr 0.1.0](http://github.com/marionettejs/backbone.wreqr)
+- [Backbone.Babysitter 0.0.4](http://github.com/marionettejs/backbone.babysitter)
 
-By default, a complete implementation based on `<table />` HTML tag is
-provided but all the views can be overrided quickly and easily to create
-an implementation based on other views and tags.
+For the demo, the `Backbone.Dg` is used to render the grids
 
-A default collection is also provided to work with the `Dg` plugin.
+- [Backbone.Dg 0.0.1](http://github.com/prevole/backgone.dg)
+
+By default, a `CRUD` module implementation is available with standards actions like `new`, `edit` and `delete`
+operations. The `list` action is the `main` action that will be used by default when no action is specified.
+
+The management of the browser history is done through the `Backbone.history` API. When the `Admin.ApplicationController`
+is started, the `History` is also started. Each module registered will also register `routes` in a `Backbone.Router`
+handled by the `Admin.ApplicationController`. By default, a `CRUD` module is bind to three `routes`:
+
+- `<moduleName>`: which goes to the main action
+- `<moduleName>/new`: which goes to the action that allows creating a new item
+- `<moduleName>/edit/:id`: which goes to the edition action to update the item
+
+These routes are `bookmarkable` and then can be reach through a the navigation bar of the browser. For the `delete`
+action, this is not the same scenario. Once a record is deleted, the resource is no more available on the server and
+then the route to reach should not be available anymore. This is the reason why there is no default route offered for
+`delete` action.
 ###
 window.Backbone.Admin = window.Admin = ( (Backbone, Marionette, _, $) ->
   Admin = { version: "0.0.1" }
@@ -36,13 +50,11 @@ window.Backbone.Admin = window.Admin = ( (Backbone, Marionette, _, $) ->
   authorizator = null
 
 
-  # backbone.admin.utils.coffee
   # backbone.admin.authorizator.coffee
   # backbone.admin.maincontroller.coffee
   # backbone.admin.formview.coffee
   # backbone.admin.modulecontroller.coffee
 
-  #= backbone.admin.utils.coffee
   #= backbone.admin.action.coffee
   #= backbone.admin.actionfactory.coffee
   #= backbone.admin.appcontroller.coffee
