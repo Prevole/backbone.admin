@@ -353,9 +353,8 @@ FruitsModule = class extends Admin.Module
     fruitModels = _.reject fruitModels, (fruit) ->
       fruit.get("id") == options.model.get("id")
 
-#    @routableAction "main"
-#    @main()
     fruits.refresh()
+#    @action "main"
 
   main: ->
     fruitLayout = new FruitGridLayout()
@@ -367,7 +366,39 @@ FruitsModule = class extends Admin.Module
       @routableAction "edit", {id: model.get("id")}, {model: model}
 
     @listenTo fruitLayout, "delete", (model) =>
-      @action "delete", {model: model}
+      self = @
+
+      if @deleteView is undefined
+        @deleteView = new (Backbone.View.extend
+          tagName: "div"
+
+          events:
+            "click .no": "no"
+            "click .yes": "yes"
+
+          no: (event) ->
+            event.preventDefault()
+            @$el.modal("hide")
+
+          yes: (event) ->
+            @no(event)
+            self.action "delete", {model: @model}
+
+          setModel: (model) ->
+            @model = model
+            @
+
+          render: ->
+            @$el = $("#deleteModal")
+            @delegateEvents()
+            @$el.modal(show: true)
+            @
+        )()
+
+      @deleteView.setModel(model).render()
+
+#      $("#deleteModal").modal(show: true)
+#      @action "delete", {model: model}
 
     r1: fruitLayout
 

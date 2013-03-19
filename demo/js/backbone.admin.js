@@ -154,16 +154,11 @@ then the route to reach should not be available anymore. This is the reason why 
       };
 
       _Class.prototype.action = function(action, options) {
-        var key, name, result, _i, _j, _len, _len1, _ref, _ref1;
+        var key, result, _i, _len, _ref;
         result = action.module[action.actionName](options);
-        _ref = this.regionNames;
+        _ref = _.keys(result);
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          name = _ref[_i];
-          this.application[name].close();
-        }
-        _ref1 = _.keys(result);
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          key = _ref1[_j];
+          key = _ref[_i];
           if (this.application[key] !== void 0) {
             this.application[key].show(result[key]);
           }

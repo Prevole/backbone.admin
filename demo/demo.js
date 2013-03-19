@@ -587,9 +587,40 @@
         });
       });
       this.listenTo(fruitLayout, "delete", function(model) {
-        return _this.action("delete", {
-          model: model
-        });
+        var self;
+        self = _this;
+        if (_this.deleteView === void 0) {
+          _this.deleteView = new (Backbone.View.extend({
+            tagName: "div",
+            events: {
+              "click .no": "no",
+              "click .yes": "yes"
+            },
+            no: function(event) {
+              event.preventDefault();
+              return this.$el.modal("hide");
+            },
+            yes: function(event) {
+              this.no(event);
+              return self.action("delete", {
+                model: this.model
+              });
+            },
+            setModel: function(model) {
+              this.model = model;
+              return this;
+            },
+            render: function() {
+              this.$el = $("#deleteModal");
+              this.delegateEvents();
+              this.$el.modal({
+                show: true
+              });
+              return this;
+            }
+          }))();
+        }
+        return _this.deleteView.setModel(model).render();
       });
       return {
         r1: fruitLayout

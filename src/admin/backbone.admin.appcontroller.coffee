@@ -54,8 +54,8 @@ Admin.ApplicationController = class
   action: (action, options) ->
     result = action.module[action.actionName](options)
 
-    for name in @regionNames
-      @application[name].close()
+#    for name in @regionNames
+#      @application[name].close()
 
     for key in _.keys(result)
       unless @application[key] is undefined
