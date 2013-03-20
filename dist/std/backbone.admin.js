@@ -110,7 +110,19 @@ then the route to reach should not be available anymore. This is the reason why 
       return _Class;
 
     })())();
-    Admin.ApplicationController = (function() {
+    /*
+    ## Admin.ApplicationController
+    
+    The `application controller` manage the different module of the application
+    to offer the one page application experience.
+    
+    The routes are gather from the different modules to manage the browser history
+    and the actions related to the modules.
+    */
+
+    Admin.ApplicationController = (function(_super) {
+
+      __extends(_Class, _super);
 
       _Class.prototype.modules = {};
 
@@ -120,15 +132,13 @@ then the route to reach should not be available anymore. This is the reason why 
 
       _Class.prototype.started = false;
 
-      function _Class(application) {
-        if (application === void 0) {
-          throw new Error("An application must be defined");
-        }
-        if (!(application instanceof Marionette.Application)) {
-          throw new Error("Application should be Marionnette.Application");
-        }
-        this.application = application;
-        _.extend(this, Backbone.Events);
+      /*
+      Constructor
+      */
+
+
+      function _Class(options) {
+        _Class.__super__.constructor.call(this, options);
         this.on("action:done", this.actionDone);
         this.listenTo(this.router, "route", this.routedAction);
       }
@@ -147,10 +157,9 @@ then the route to reach should not be available anymore. This is the reason why 
         var actionParts, module;
         actionParts = action.split(":");
         module = this.modules[actionParts[0]];
-        if (module === void 0) {
-          return;
+        if (module !== void 0) {
+          return this.action(ActionFactory.routableAction(module, actionParts[1]), params);
         }
-        return this.action(ActionFactory.routableAction(module, actionParts[1]), params);
       };
 
       _Class.prototype.action = function(action, options) {
@@ -159,8 +168,8 @@ then the route to reach should not be available anymore. This is the reason why 
         _ref = _.keys(result);
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           key = _ref[_i];
-          if (this.application[key] !== void 0) {
-            this.application[key].show(result[key]);
+          if (this[key] !== void 0) {
+            this[key].show(result[key]);
           }
         }
         return this.trigger("action:done", action, options);
@@ -171,6 +180,15 @@ then the route to reach should not be available anymore. This is the reason why 
           return this.router.navigate(action.path());
         }
       };
+
+      /*
+      Allow to register a module. When this function is called, the action that can be routed
+      are gathered and registered in the `ApplicationController` router. Validations are done
+      to enforce that the module is valid
+        
+      @param {Backbone.Admin.Module} module The module to register
+      */
+
 
       _Class.prototype.registerModule = function(module) {
         var actionName, actions, moduleActionName, path;
@@ -194,18 +212,18 @@ then the route to reach should not be available anymore. This is the reason why 
       };
 
       _Class.prototype.registerRegion = function(name, region) {
-        if (this.application[name] !== void 0) {
+        if (this[name] !== void 0) {
           throw new Error("The region " + name + " is already registered");
         }
-        this.application[name] = region;
+        this[name] = region;
         return this.regionNames.push(name);
       };
 
-      _Class.prototype.start = function() {
+      _Class.prototype.start = function(options) {
         if (this.started) {
           return console.log("Application controller already started.");
         } else {
-          this.application.start();
+          _Class.__super__.start.call(this, options);
           return Backbone.history.start({
             pushState: true
           });
@@ -214,7 +232,7 @@ then the route to reach should not be available anymore. This is the reason why 
 
       return _Class;
 
-    })();
+    })(Marionette.Application);
     Admin.NavigationView = (function(_super) {
 
       __extends(_Class, _super);
@@ -236,7 +254,6 @@ then the route to reach should not be available anymore. This is the reason why 
 
     })(Marionette.View);
     Admin.Module = (function() {
-      var initGridLayoutClass;
 
       function _Class(options) {
         if (this.name === void 0) {
@@ -258,8 +275,6 @@ then the route to reach should not be available anymore. This is the reason why 
       _Class.prototype.action = function(actionName, options) {
         return this.trigger("action", ActionFactory.action(this, actionName), options);
       };
-
-      initGridLayoutClass = function(gridLayoutClass) {};
 
       return _Class;
 

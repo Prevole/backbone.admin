@@ -1,21 +1,35 @@
+###
+## Admin.ApplicationController
 
-# The main controller to rule the application on the client side
-Admin.ApplicationController = class
+The `application controller` manage the different module of the application
+to offer the one page application experience.
+
+The routes are gather from the different modules to manage the browser history
+and the actions related to the modules.
+###
+Admin.ApplicationController = class extends Marionette.Application
+  # Modules managed by the application controller
   modules: {}
+
+  # Region where the module action result should be displayed
   regionNames: []
 
+  # The router to manage the routes associated to the module actions
   router: new Backbone.Router()
 
+  # Flag to enforce that the application controller cannot be started twice
   started: false
 
-  constructor: (application) ->
-    throw new Error "An application must be defined" if application is undefined
-    throw new Error "Application should be Marionnette.Application" unless application instanceof Marionette.Application
+  ###
+  Constructor
+  ###
+  constructor: (options) ->
+#
+#    @application = application
+#
+#    _.extend @, Backbone.Events
 
-    @application = application
-
-    _.extend @, Backbone.Events
-
+    super options
     @on "action:done", @actionDone
     @listenTo @router, "route", @routedAction
 
@@ -33,33 +47,18 @@ Admin.ApplicationController = class
 
     module = @modules[actionParts[0]]
 
-    return if module is undefined
+    @action ActionFactory.routableAction(module, actionParts[1]), params unless module is undefined
 
-    @action ActionFactory.routableAction(module, actionParts[1]), params
-
-#    @router = new (Backbone.Router.extend(
-#      initializer: (options) ->
-#        @controller = options.controller
-#
-#        @on "route", @actionHandler
-#
-#      actionHandler: (router, route, params) ->
-#        console.log route
-#        console.log arguments
-#
-#    ))(controller: @)
-
-#    @on "action", @action, @
 
   action: (action, options) ->
     result = action.module[action.actionName](options)
 
 #    for name in @regionNames
-#      @application[name].close()
+#      @[name].close()
 
     for key in _.keys(result)
-      unless @application[key] is undefined
-        @application[key].show result[key]
+      unless @[key] is undefined
+        @[key].show result[key]
 
     @trigger "action:done", action, options
 #  routableAction: (actionDescription, options) ->
@@ -73,44 +72,17 @@ Admin.ApplicationController = class
   actionDone: (action, options) ->
     @router.navigate action.path() if action.isRoutable
 
-#    actionDescription = new Action(action)
-#
-#    module = @modules[actionDescription.moduleName]
-#
-#    path = actionDescription.path(module)
-#      module.actions[actionDescription.actionName]
-#
-#    unless actionName == "main"
-#      unless options is undefined
-#        path = path.replace ":#{module.modelIdentifier}", options.model.get(module.modelIdentifier)
-#
-#    @executeAction actionDescription, options
-#
-#    @router.navigate("/#{path}")
-#
-#  handleAction: (moduleName, actionName, path, options) ->
-##    alert "#{moduleName}:#{actionName}:#{path}:#{options}"
-#
-#    module = @modules[moduleName]
-#
-#    return if module is undefined
-#
-#    result = module[actionName](options)
-#
-#    for key in _.keys(result)
-#      unless @application[key] is undefined
-#        @application[key].show result[key]
-#
-#  handleAction: (actionResult) ->
-##    result = action()
-#
-#    for key in _.keys(actionResult)
-#      unless @application[key] is undefined
-#        @application[key].show actionResult[key]
+  ###
+  Allow to register a module. When this function is called, the action that can be routed
+  are gathered and registered in the `ApplicationController` router. Validations are done
+  to enforce that the module is valid
 
+  @param {Backbone.Admin.Module} module The module to register
+  ###
   registerModule: (module) ->
     throw new Error "The module cannot be undefined" if module is undefined
     throw new Error "The module must be from Admin.Module type" unless module instanceof Admin.Module
+#    throw new Error "The module must have a name" unless module.name is undefined || module.name.length == 0
     throw new Error "The module is already registered" unless @modules[module.name] is undefined
 
     # Register the module
@@ -125,55 +97,19 @@ Admin.ApplicationController = class
       moduleActionName = "#{module.name}:#{actionName}"
       @router.route path, moduleActionName
 
-    # Liste the event action on each module registered
+    # Listen the event action on each module registered
     @listenTo module, "action", @action
 
   registerRegion: (name, region) ->
-    throw new Error "The region #{name} is already registered" unless @application[name] is undefined
+    throw new Error "The region #{name} is already registered" unless @[name] is undefined
 
 #    @regions[name] = region
-    @application[name] = region
+    @[name] = region
     @regionNames.push name
 
-  start: ->
+  start: (options) ->
     if @started
       console.log "Application controller already started."
     else
-      @application.start()
+      super options
       Backbone.history.start(pushState: true)
-
-#  _registerRoute: (module, actionName, path) ->
-#    @router.route path, "#{module.name}:#{actionName}", module["_#{actionName}"]
-
-
-#  switchModule: (moduleName, changeUrl = true) ->
-#    module = retrieveModule.call @, moduleName
-#
-##    History.navigate "/books"
-#
-##    if changeUrl
-##      module.getRouter().changeUrl("grid")
-#
-##      if module.collection.length == 0
-##        module.collection.fetch()
-#
-#    gvent.trigger "changeView", new module.gridLayoutClass()
-#
-#  crudView: (view, type, options) ->
-#    module = view.prototype.controller
-#
-#    switch type
-#      when "create"
-#        module.getRouter().changeUrl(type)
-#      when "edit"
-#        module.getRouter().changeUrl(type, id: options.model.get("id"))
-#
-#    gvent.trigger "changeView", new view(options)
-#
-#  retrieveModule = (moduleName) ->
-#    if @modules[moduleName]
-#      @modules[moduleName]
-#    else
-#      throw new Error "The module #{moduleName} is not registered."
-#
-#mainController = new MainController()

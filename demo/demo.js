@@ -675,7 +675,7 @@
 
   $(document).ready(function() {
     var appController, navigationView, region1, region2;
-    appController = new Admin.ApplicationController(new Marionette.Application());
+    appController = new Admin.ApplicationController();
     navigationView = new NavigationView();
     appController.listenTo(navigationView, "action", appController.routeAction);
     appController.registerModule(new BooksModule());

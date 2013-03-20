@@ -427,7 +427,7 @@ Region2 = class extends Marionette.Region
   el: ".content2"
 
 $(document).ready ->
-  appController = new Admin.ApplicationController(new Marionette.Application())
+  appController = new Admin.ApplicationController()
 
   navigationView = new NavigationView()
 
