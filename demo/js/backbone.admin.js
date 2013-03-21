@@ -120,9 +120,11 @@ then the route to reach should not be available anymore. This is the reason why 
     and the actions related to the modules.
     */
 
-    Admin.ApplicationController = (function(_super) {
+    Admin.ApplicationController = (function() {
 
-      __extends(_Class, _super);
+      _Class.prototype.initializers = new Marionette.Callbacks();
+
+      _Class.prototype.triggerMethod = Marionette.triggerMethod;
 
       _Class.prototype.modules = {};
 
@@ -134,14 +136,56 @@ then the route to reach should not be available anymore. This is the reason why 
 
       /*
       Constructor
+        
+      @param {Object} options The options to configure the application controller
       */
 
 
       function _Class(options) {
-        _Class.__super__.constructor.call(this, options);
+        _.extend(this, Backbone.Events);
         this.on("action:done", this.actionDone);
         this.listenTo(this.router, "route", this.routedAction);
       }
+
+      /*
+      Add an initializer to execute when the application will start
+        
+      @param {Function} initializer The initializer to add
+      */
+
+
+      _Class.prototype.addInitializer = function(initializer) {
+        return this.initializers.add(initializer);
+      };
+
+      /*
+      Like the `Marionette.Application.start(options)`, this method
+      start the `ApplicationController`.
+        
+      @param {Object} options The options given to every initializer
+      */
+
+
+      _Class.prototype.start = function(options) {
+        if (this.started) {
+          return console.log("Application controller already started.");
+        } else {
+          this.triggerMethod("start:before");
+          this.initializers.run(options, this);
+          this.triggerMethod("start:after");
+          return Backbone.history.start({
+            pushState: true
+          });
+        }
+      };
+
+      _Class.prototype.onStartBefore = function() {
+        return alert("Before");
+      };
+
+      _Class.prototype.onStartAfter = function() {
+        return alert("After");
+      };
 
       _Class.prototype.routedAction = function(action, params) {
         var actionParts, module;
@@ -219,20 +263,9 @@ then the route to reach should not be available anymore. This is the reason why 
         return this.regionNames.push(name);
       };
 
-      _Class.prototype.start = function(options) {
-        if (this.started) {
-          return console.log("Application controller already started.");
-        } else {
-          _Class.__super__.start.call(this, options);
-          return Backbone.history.start({
-            pushState: true
-          });
-        }
-      };
-
       return _Class;
 
-    })(Marionette.Application);
+    })();
     Admin.NavigationView = (function(_super) {
 
       __extends(_Class, _super);

@@ -7,7 +7,13 @@ to offer the one page application experience.
 The routes are gather from the different modules to manage the browser history
 and the actions related to the modules.
 ###
-Admin.ApplicationController = class extends Marionette.Application
+Admin.ApplicationController = class
+  # To manage the initilizers like the `Marionette.Application` does
+  initializers: new Marionette.Callbacks()
+
+  # To raise an event and execute a method `on` something
+  triggerMethod: Marionette.triggerMethod
+
   # Modules managed by the application controller
   modules: {}
 
@@ -22,16 +28,39 @@ Admin.ApplicationController = class extends Marionette.Application
 
   ###
   Constructor
+
+  @param {Object} options The options to configure the application controller
   ###
   constructor: (options) ->
-#
-#    @application = application
-#
-#    _.extend @, Backbone.Events
+    _.extend @, Backbone.Events
 
-    super options
     @on "action:done", @actionDone
     @listenTo @router, "route", @routedAction
+
+
+  ###
+  Add an initializer to execute when the application will start
+
+  @param {Function} initializer The initializer to add
+  ###
+  addInitializer: (initializer) ->
+    @initializers.add(initializer)
+
+  ###
+  Like the `Marionette.Application.start(options)`, this method
+  start the `ApplicationController`.
+
+  @param {Object} options The options given to every initializer
+  ###
+  start: (options) ->
+    if @started
+      console.log "Application controller already started."
+    else
+      @triggerMethod("start:before", options)
+      @initializers.run(options, @)
+      Backbone.history.start(pushState: true)
+      @triggerMethod("start:after", options)
+
 
   routedAction: (action, params) ->
     actionParts = action.split(":")
@@ -107,9 +136,3 @@ Admin.ApplicationController = class extends Marionette.Application
     @[name] = region
     @regionNames.push name
 
-  start: (options) ->
-    if @started
-      console.log "Application controller already started."
-    else
-      super options
-      Backbone.history.start(pushState: true)
