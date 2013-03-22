@@ -29,9 +29,8 @@ Admin.ApplicationController = class
   ###
   Constructor
 
-  @param {Object} options The options to configure the application controller
+  @param {Object} options The options to configure the application controller. Recognized options:
 
-  Recognized options:
   ```
   options:
 		router: Boolean | Router class | Router instance
