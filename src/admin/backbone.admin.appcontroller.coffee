@@ -29,16 +29,16 @@ Admin.ApplicationController = class
   ###
   Constructor
 
-  ```
-  # Available options:
-  options:
-    router:
-  ```
-
-  *`router`: Could be a boolean to enable or disable the router. Could be a class to instanciate a new router or
-  could be an instanciated router.
-
   @param {Object} options The options to configure the application controller
+
+  Recognized options:
+  ```
+  options:
+		router: Boolean | Router class | Router instance
+  ```
+
+  - `router`: Could be a boolean to enable or disable the router. Could be a class to instanciate a new router or
+  could be an instanciated router.
   ###
   constructor: (options) ->
     _.extend @, Backbone.Events
