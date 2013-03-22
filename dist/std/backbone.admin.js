@@ -130,12 +130,21 @@ then the route to reach should not be available anymore. This is the reason why 
 
       _Class.prototype.regionNames = [];
 
-      _Class.prototype.router = new Backbone.Router();
+      _Class.prototype.router = null;
 
       _Class.prototype.started = false;
 
       /*
       Constructor
+        
+      ```
+      # Available options:
+      options:
+        router:
+      ```
+        
+      *`router`: Could be a boolean to enable or disable the router. Could be a class to instanciate a new router or
+      could be an instanciated router.
         
       @param {Object} options The options to configure the application controller
       */
@@ -143,8 +152,24 @@ then the route to reach should not be available anymore. This is the reason why 
 
       function _Class(options) {
         _.extend(this, Backbone.Events);
+        options = _.defaults(options || {}, {
+          router: Backbone.Router
+        });
+        if (options !== void 0) {
+          if (options.router !== void 0) {
+            if (_.isBoolean(options.router) && options.router) {
+              this.router = new Backbone.Router();
+            } else if (_.isFunction(options.router)) {
+              this.router = new options.router(options);
+            } else {
+              this.router = options.router;
+            }
+          }
+        }
         this.on("action:done", this.actionDone);
-        this.listenTo(this.router, "route", this.routedAction);
+        if (!_.isNull(this.router)) {
+          this.listenTo(this.router, "route", this.routedAction);
+        }
       }
 
       /*
@@ -170,21 +195,15 @@ then the route to reach should not be available anymore. This is the reason why 
         if (this.started) {
           return console.log("Application controller already started.");
         } else {
-          this.triggerMethod("start:before");
+          this.triggerMethod("start:before", options);
           this.initializers.run(options, this);
-          this.triggerMethod("start:after");
-          return Backbone.history.start({
-            pushState: true
-          });
+          if (!(_.isNull(this.router) && !Backbone.history.started)) {
+            Backbone.history.start({
+              pushState: true
+            });
+          }
+          return this.triggerMethod("start:after", options);
         }
-      };
-
-      _Class.prototype.onStartBefore = function() {
-        return alert("Before");
-      };
-
-      _Class.prototype.onStartAfter = function() {
-        return alert("After");
       };
 
       _Class.prototype.routedAction = function(action, params) {
@@ -220,7 +239,7 @@ then the route to reach should not be available anymore. This is the reason why 
       };
 
       _Class.prototype.actionDone = function(action, options) {
-        if (action.isRoutable) {
+        if (!_.isNull(this.router) && action.isRoutable) {
           return this.router.navigate(action.path());
         }
       };
@@ -247,10 +266,12 @@ then the route to reach should not be available anymore. This is the reason why 
         }
         this.modules[module.name] = module;
         actions = _.chain(module.routableActions).pairs().sortBy(1).object().value();
-        for (actionName in actions) {
-          path = actions[actionName];
-          moduleActionName = "" + module.name + ":" + actionName;
-          this.router.route(path, moduleActionName);
+        if (!_.isNull(this.router)) {
+          for (actionName in actions) {
+            path = actions[actionName];
+            moduleActionName = "" + module.name + ":" + actionName;
+            this.router.route(path, moduleActionName);
+          }
         }
         return this.listenTo(module, "action", this.action);
       };

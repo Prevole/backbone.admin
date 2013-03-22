@@ -21,7 +21,7 @@ Admin.ApplicationController = class
   regionNames: []
 
   # The router to manage the routes associated to the module actions
-  router: new Backbone.Router()
+  router: null
 
   # Flag to enforce that the application controller cannot be started twice
   started: false
@@ -29,13 +29,34 @@ Admin.ApplicationController = class
   ###
   Constructor
 
+  ```
+  # Available options:
+  options:
+    router:
+  ```
+
+  *`router`: Could be a boolean to enable or disable the router. Could be a class to instanciate a new router or
+  could be an instanciated router.
+
   @param {Object} options The options to configure the application controller
   ###
   constructor: (options) ->
     _.extend @, Backbone.Events
 
+    options = _.defaults options || {},
+      { router: Backbone.Router }
+
+    if _.isBoolean(options.router) and options.router
+      @router = new Backbone.Router()
+    else if _.isFunction(options.router)
+      @router = new options.router(options)
+    else
+      @router = options.router
+
+
     @on "action:done", @actionDone
-    @listenTo @router, "route", @routedAction
+
+    @listenTo @router, "route", @routedAction unless _.isNull(@router)
 
 
   ###
@@ -57,10 +78,12 @@ Admin.ApplicationController = class
       console.log "Application controller already started."
     else
       @triggerMethod("start:before", options)
-      @initializers.run(options, @)
-      Backbone.history.start(pushState: true)
-      @triggerMethod("start:after", options)
 
+      @initializers.run(options, @)
+
+      Backbone.history.start(pushState: true) unless _.isNull(@router) and not Backbone.history.started
+
+      @triggerMethod("start:after", options)
 
   routedAction: (action, params) ->
     actionParts = action.split(":")
@@ -99,7 +122,7 @@ Admin.ApplicationController = class
 
 
   actionDone: (action, options) ->
-    @router.navigate action.path() if action.isRoutable
+    @router.navigate action.path() if not _.isNull(@router) and action.isRoutable
 
   ###
   Allow to register a module. When this function is called, the action that can be routed
@@ -122,9 +145,10 @@ Admin.ApplicationController = class
     actions = _.chain(module.routableActions).pairs().sortBy(1).object().value()
 
     # Register the routes in the router without any callback. Callbacks are done via the route event.
-    for actionName, path of actions
-      moduleActionName = "#{module.name}:#{actionName}"
-      @router.route path, moduleActionName
+    unless _.isNull(@router)
+      for actionName, path of actions
+        moduleActionName = "#{module.name}:#{actionName}"
+        @router.route path, moduleActionName
 
     # Listen the event action on each module registered
     @listenTo module, "action", @action
