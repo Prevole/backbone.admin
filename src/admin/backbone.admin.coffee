@@ -45,7 +45,7 @@ window.Backbone.Admin = window.Admin = ( (Backbone, Marionette, _, $) ->
   moduleNamePattern = new RegExp(/[a-z]+(:[a-z]+)*/)
 
   # Create the event aggregator
-  gvent = new Marionette.EventAggregator()
+#  gvent = new Marionette.EventAggregator()
 
   authorizator = null
 

@@ -84,8 +84,8 @@
       var localData, storedSuccess,
         _this = this;
       storedSuccess = options.success;
-      options.success = function(collection, response, options) {
-        storedSuccess(collection, response, options);
+      options.success = function(response) {
+        storedSuccess(response);
         return _this.trigger("fetched");
       };
       localData = _.clone(this.getModels());
@@ -115,9 +115,7 @@
       this.meta.to = this.meta.from + this.meta.perPage;
       localData = localData.slice(this.meta.from, this.meta.to);
       this.meta.from = this.meta.from + 1;
-      return options.success(this, localData, {
-        update: false
-      });
+      return options.success(localData);
     };
 
     _Class.prototype.refresh = function() {

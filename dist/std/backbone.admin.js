@@ -44,14 +44,13 @@ then the route to reach should not be available anymore. This is the reason why 
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   window.Backbone.Admin = window.Admin = (function(Backbone, Marionette, _, $) {
-    var Action, ActionFactory, Admin, applicationStarted, authorizator, gvent, i18nKeys, initialized, moduleNamePattern;
+    var Action, ActionFactory, Admin, applicationStarted, authorizator, i18nKeys, initialized, moduleNamePattern;
     Admin = {
       version: "0.0.1"
     };
     applicationStarted = false;
     initialized = false;
     moduleNamePattern = new RegExp(/[a-z]+(:[a-z]+)*/);
-    gvent = new Marionette.EventAggregator();
     authorizator = null;
     Action = (function() {
 
@@ -137,16 +136,15 @@ then the route to reach should not be available anymore. This is the reason why 
       /*
       Constructor
         
+      @param {Object} options The options to configure the application controller. Recognized options:
+        
       ```
-      # Available options:
       options:
-        router:
+        		router: Boolean | Router class | Router instance
       ```
         
-      *`router`: Could be a boolean to enable or disable the router. Could be a class to instanciate a new router or
+      - `router`: Could be a boolean to enable or disable the router. Could be a class to instanciate a new router or
       could be an instanciated router.
-        
-      @param {Object} options The options to configure the application controller
       */
 
 
@@ -155,16 +153,12 @@ then the route to reach should not be available anymore. This is the reason why 
         options = _.defaults(options || {}, {
           router: Backbone.Router
         });
-        if (options !== void 0) {
-          if (options.router !== void 0) {
-            if (_.isBoolean(options.router) && options.router) {
-              this.router = new Backbone.Router();
-            } else if (_.isFunction(options.router)) {
-              this.router = new options.router(options);
-            } else {
-              this.router = options.router;
-            }
-          }
+        if (_.isBoolean(options.router) && options.router) {
+          this.router = new Backbone.Router();
+        } else if (_.isFunction(options.router)) {
+          this.router = new options.router(options);
+        } else {
+          this.router = options.router;
         }
         this.on("action:done", this.actionDone);
         if (!_.isNull(this.router)) {
