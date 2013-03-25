@@ -76,13 +76,13 @@ Admin.ApplicationController = class
     if @started
       console.log "Application controller already started."
     else
-      @triggerMethod("start:before", options)
+      @triggerMethod("before:start", options)
 
       @initializers.run(options, @)
 
       Backbone.history.start(pushState: true) unless _.isNull(@router) and not Backbone.history.started
 
-      @triggerMethod("start:after", options)
+      @triggerMethod("after:start", options)
 
   routedAction: (action, params) ->
     actionParts = action.split(":")

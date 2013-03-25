@@ -189,14 +189,14 @@ then the route to reach should not be available anymore. This is the reason why 
         if (this.started) {
           return console.log("Application controller already started.");
         } else {
-          this.triggerMethod("start:before", options);
+          this.triggerMethod("before:start", options);
           this.initializers.run(options, this);
           if (!(_.isNull(this.router) && !Backbone.history.started)) {
             Backbone.history.start({
               pushState: true
             });
           }
-          return this.triggerMethod("start:after", options);
+          return this.triggerMethod("after:start", options);
         }
       };
 
@@ -291,6 +291,10 @@ then the route to reach should not be available anymore. This is the reason why 
 
       _Class.prototype.events = {
         "click [data-action]": "action"
+      };
+
+      _Class.prototype.initialize = function(options) {
+        return options.applicationController.listenTo(this, "action", options.applicationController.routeAction);
       };
 
       _Class.prototype.action = function(event) {

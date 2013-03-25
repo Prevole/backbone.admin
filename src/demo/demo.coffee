@@ -82,12 +82,7 @@ Region2 = class extends Marionette.Region
   el: ".content2"
 
 $(document).ready ->
-  navigationView = new NavigationView()
-
-  appController.listenTo navigationView, "action", appController.routeAction
-
-#  appController.registerModule(new BooksModule())
-#  appController.registerModule(new FruitsModule())
+  new NavigationView(applicationController: appController)
 
   appController.registerRegion("r1", new Region1())
   appController.registerRegion("r2", new Region2())

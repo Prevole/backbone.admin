@@ -836,9 +836,9 @@
   })(Marionette.Region);
 
   $(document).ready(function() {
-    var navigationView;
-    navigationView = new NavigationView();
-    appController.listenTo(navigationView, "action", appController.routeAction);
+    new NavigationView({
+      applicationController: appController
+    });
     appController.registerRegion("r1", new Region1());
     appController.registerRegion("r2", new Region2());
     return appController.start();
