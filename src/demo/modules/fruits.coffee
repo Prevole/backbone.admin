@@ -77,6 +77,25 @@ FruitGridLayout = Dg.createGridLayout(
         headerView: FruitHeaderView
 )
 
+
+AddFruitView = Marionette.ItemView.extend
+  template: "#fruitForm"
+
+  events:
+    "click button": "addFruit"
+
+  ui:
+    fruitName: "#fruitName"
+
+  addFruit: (event) ->
+    event.preventDefault()
+
+    fruitModels.push new FruitModel({id: _.random(0, 1000), name: @ui.fruitName.val()})
+
+    @trigger "add:done"
+#    self.routableAction("main")
+
+
 ###
 ## FruitsModule
 
@@ -90,32 +109,22 @@ FruitsModule = class extends Admin.Module
     add:    "fruits/add"
     edit:   "fruits/edit/:id"
 
+  initialize: (options) ->
+    super(options)
+
   add: ->
-    self = @
-    AddFruitView = Marionette.ItemView.extend
-      template: "#fruitForm"
-      collection: fruits
+    addFruitView = new AddFruitView()
 
-      events:
-        "click button": "addFruit"
+    addFruitView.on "add:done", =>
+      @.routableAction("main")
 
-      ui:
-        fruitName: "#fruitName"
-
-      addFruit: (event) ->
-        event.preventDefault()
-
-        fruitModels.push new FruitModel({name: @ui.fruitName.val()})
-
-        self.routableAction("main")
-
-    r1: new AddFruitView()
+    r1: addFruitView
 
   edit: (options) ->
     self = @
 
     if options.model is undefined
-      model = fruits.get options[0]
+      model = fruits.get options.id
     else
       model = options.model
 

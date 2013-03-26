@@ -58,11 +58,11 @@ then the route to reach should not be available anymore. This is the reason why 
 
       _Class.prototype.actionName = "main";
 
-      _Class.prototype.pathParameters = {};
+      _Class.prototype.options = {};
 
       _Class.prototype.isRoutable = false;
 
-      function _Class(isRoutable, module, actionName, pathParameters) {
+      function _Class(isRoutable, module, actionName, options) {
         this.isRoutable = isRoutable;
         this.module = module;
         if (this.module === void 0) {
@@ -72,8 +72,8 @@ then the route to reach should not be available anymore. This is the reason why 
         if (actionName !== void 0) {
           this.actionName = actionName;
         }
-        if (pathParameters !== void 0) {
-          this.pathParameters = pathParameters;
+        if (options !== void 0) {
+          this.options = options;
         }
       }
 
@@ -83,7 +83,7 @@ then the route to reach should not be available anymore. This is the reason why 
           return;
         }
         path = this.module.routableActions[this.actionName];
-        _ref = this.pathParameters;
+        _ref = this.options;
         for (key in _ref) {
           value = _ref[key];
           path = path.replace(":" + key, value);
@@ -98,12 +98,20 @@ then the route to reach should not be available anymore. This is the reason why 
 
       function _Class() {}
 
-      _Class.prototype.routableAction = function(module, actionName, pathParameters) {
-        return new Action(true, module, actionName, pathParameters);
+      _Class.prototype.routableAction = function(module, actionName, options) {
+        return new Action(true, module, actionName, options);
       };
 
-      _Class.prototype.action = function(module, actionName) {
-        return new Action(false, module, actionName, {});
+      _Class.prototype.action = function(module, actionName, options) {
+        return new Action(false, module, actionName, options);
+      };
+
+      _Class.prototype.outsideAction = function(changeRoute, module, actionName, options) {
+        if (changeRoute) {
+          return this.routableAction(module, actionName, options);
+        } else {
+          return this.action(module, actionName, options);
+        }
       };
 
       return _Class;
@@ -120,6 +128,7 @@ then the route to reach should not be available anymore. This is the reason why 
     */
 
     Admin.ApplicationController = (function() {
+      var actionFromOutside, actionFromRouter;
 
       _Class.prototype.initializers = new Marionette.Callbacks();
 
@@ -149,6 +158,7 @@ then the route to reach should not be available anymore. This is the reason why 
 
 
       function _Class(options) {
+        var _this = this;
         _.extend(this, Backbone.Events);
         options = _.defaults(options || {}, {
           router: Backbone.Router
@@ -160,9 +170,14 @@ then the route to reach should not be available anymore. This is the reason why 
         } else {
           this.router = options.router;
         }
+        this.on("action:name", function(actionName, changeRoute, parameters) {
+          return actionFromOutside.call(_this, actionName, changeRoute, parameters);
+        });
         this.on("action:done", this.actionDone);
         if (!_.isNull(this.router)) {
-          this.listenTo(this.router, "route", this.routedAction);
+          this.listenTo(this.router, "route", function(actionName, options) {
+            return actionFromRouter.call(_this, actionName, options);
+          });
         }
       }
 
@@ -200,28 +215,44 @@ then the route to reach should not be available anymore. This is the reason why 
         }
       };
 
-      _Class.prototype.routedAction = function(action, params) {
-        var actionParts, module;
-        actionParts = action.split(":");
-        module = this.modules[actionParts[0]];
-        if (module === void 0) {
-          return;
-        }
-        return this.action(ActionFactory.action(module, actionParts[1]), params);
-      };
+      /*
+      Manage an action from the outside of the application controller or any of the modules
+      in the application controller.
+        
+      For example, a navigation bar can trigger an action like ´<moduleName>:<actionName>´ and this
+      method will retrieve the module and the action to run. Once done, an `Admin.Action` is created
+      to represent the action to run.
+        
+      @param {String} actionName The name of the action with the format: `<moduleName>:<actionName>`
+      @param {Boolean} changeRoute Define if the route in the navigation bar must change or not
+      @param {Object} options A set of options to complete the path in the navigation bar
+                              and/or used by the action execution
+      */
 
-      _Class.prototype.routeAction = function(action, params) {
-        var actionParts, module;
-        actionParts = action.split(":");
+
+      actionFromOutside = function(actionName, changeRoute, options) {
+        var action, actionParts, module;
+        actionParts = actionName.split(":");
         module = this.modules[actionParts[0]];
+        action = actionParts[1] === void 0 ? "main" : actionParts[1];
         if (module !== void 0) {
-          return this.action(ActionFactory.routableAction(module, actionParts[1]), params);
+          return this.action(ActionFactory.outsideAction(changeRoute, module, action, options));
         }
       };
 
-      _Class.prototype.action = function(action, options) {
+      actionFromRouter = function(actionName, options) {
+        var action, actionParts, module;
+        actionParts = actionName.split(":");
+        module = this.modules[actionParts[0]];
+        action = actionParts[1] === void 0 ? "main" : actionParts[1];
+        if (module !== void 0) {
+          return this.action(ActionFactory.action(module, action, options));
+        }
+      };
+
+      _Class.prototype.action = function(action) {
         var key, result, _i, _len, _ref;
-        result = action.module[action.actionName](options);
+        result = action.module[action.actionName](action.options);
         _ref = _.keys(result);
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           key = _ref[_i];
@@ -229,10 +260,10 @@ then the route to reach should not be available anymore. This is the reason why 
             this[key].show(result[key]);
           }
         }
-        return this.trigger("action:done", action, options);
+        return this.trigger("action:done", action);
       };
 
-      _Class.prototype.actionDone = function(action, options) {
+      _Class.prototype.actionDone = function(action) {
         if (!_.isNull(this.router) && action.isRoutable) {
           return this.router.navigate(action.path());
         }
@@ -294,20 +325,25 @@ then the route to reach should not be available anymore. This is the reason why 
       };
 
       _Class.prototype.initialize = function(options) {
-        return options.applicationController.listenTo(this, "action", options.applicationController.routeAction);
+        if (this.applicationController === void 0) {
+          if (options.applicationController === void 0) {
+            throw new Error("An application controller must be defined");
+          } else {
+            return this.applicationController = options.applicationController;
+          }
+        }
       };
 
       _Class.prototype.action = function(event) {
         event.preventDefault();
-        return this.trigger("action", $(event.target).attr("data-action"));
+        return this.applicationController.trigger("action:name", $(event.target).attr("data-action"), true);
       };
 
       return _Class;
 
     })(Marionette.View);
-    Admin.Module = (function() {
-
-      function _Class(options) {
+    Admin.Module = Marionette.Controller.extend({
+      initialize: function(options) {
         if (this.name === void 0) {
           throw new Error("The name of the module must be defined");
         }
@@ -315,29 +351,19 @@ then the route to reach should not be available anymore. This is the reason why 
           throw new Error("At least one routable action must be defined");
         }
         if (this.baseUrl === void 0) {
-          this.baseUrl = "/" + (this.name.replace(/:/g, "/"));
+          return this.baseUrl = "/" + (this.name.replace(/:/g, "/"));
         }
-        _.extend(this, Backbone.Events);
-      }
-
-      _Class.prototype.routableAction = function(actionName, pathParameters, options) {
+      },
+      routableAction: function(actionName, pathParameters, options) {
         return this.trigger("action", ActionFactory.routableAction(this, actionName, pathParameters), options);
-      };
-
-      _Class.prototype.action = function(actionName, options) {
+      },
+      action: function(actionName, options) {
         return this.trigger("action", ActionFactory.action(this, actionName), options);
-      };
-
-      return _Class;
-
-    })();
-    Admin.CrudModule = (function(_super) {
-      var initGridLayoutClass;
-
-      __extends(_Class, _super);
-
-      function _Class(options) {
-        _Class.__super__.constructor.call(this, options);
+      }
+    });
+    Admin.CrudModule = Admin.Module.extend({
+      initialize: function(options) {
+        this["super"](options);
         if (this.collection === void 0) {
           throw new Error("The collection must be specified");
         }
@@ -348,12 +374,7 @@ then the route to reach should not be available anymore. This is the reason why 
           throw new Error("The model must be specified");
         }
       }
-
-      initGridLayoutClass = function(gridLayoutClass) {};
-
-      return _Class;
-
-    })(Admin.Module);
+    });
     Admin.MainRegion = (function(_super) {
 
       __extends(_Class, _super);

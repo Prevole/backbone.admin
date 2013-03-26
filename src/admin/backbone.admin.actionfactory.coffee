@@ -1,9 +1,15 @@
 ActionFactory = new (class
-  routableAction: (module, actionName, pathParameters) ->
-    new Action(true, module, actionName, pathParameters)
+  routableAction: (module, actionName, options) ->
+    new Action(true, module, actionName, options)
 
-  action: (module, actionName) ->
-    new Action(false, module, actionName, {})
+  action: (module, actionName, options) ->
+    new Action(false, module, actionName, options)
+
+  outsideAction: (changeRoute, module, actionName, options) ->
+    if changeRoute
+      @routableAction module, actionName, options
+    else
+      @action module, actionName, options
 )()
 #    # Get the action name or define a default one
 #    @actionName = actionParts[0] unless actionParts[1] is undefined

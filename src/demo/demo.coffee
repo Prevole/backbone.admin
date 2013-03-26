@@ -73,6 +73,7 @@ appController = new Admin.ApplicationController()
 #= modules/fruits.coffee
 
 NavigationView = class extends Admin.NavigationView
+  applicationController: appController
   el: ".menu"
 
 Region1 = class extends Marionette.Region
@@ -82,7 +83,7 @@ Region2 = class extends Marionette.Region
   el: ".content2"
 
 $(document).ready ->
-  new NavigationView(applicationController: appController)
+  new NavigationView()
 
   appController.registerRegion("r1", new Region1())
   appController.registerRegion("r2", new Region2())

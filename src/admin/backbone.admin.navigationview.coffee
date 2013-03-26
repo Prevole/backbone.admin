@@ -3,9 +3,13 @@ Admin.NavigationView = class extends Marionette.View
     "click [data-action]": "action"
 
   initialize: (options) ->
-    options.applicationController.listenTo @, "action", options.applicationController.routeAction
+    if @applicationController is undefined
+      if options.applicationController is undefined
+        throw new Error "An application controller must be defined"
+      else
+        @applicationController = options.applicationController
 
   action: (event) ->
     event.preventDefault()
 
-    @trigger "action", $(event.target).attr("data-action")
+    @applicationController.trigger "action:name", $(event.target).attr("data-action"), true

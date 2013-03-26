@@ -52,10 +52,16 @@ Admin.ApplicationController = class
     else
       @router = options.router
 
+    # Action triggered from outside (navigation bar for example)
+    @on "action:name", (actionName, changeRoute, parameters) =>
+      actionFromOutside.call @, actionName, changeRoute, parameters
 
     @on "action:done", @actionDone
 
-    @listenTo @router, "route", @routedAction unless _.isNull(@router)
+    # Action triggered from the router when a certain route is browsed
+    unless _.isNull(@router)
+      @listenTo @router, "route", (actionName, options) =>
+        actionFromRouter.call @, actionName, options
 
 
   ###
@@ -84,25 +90,47 @@ Admin.ApplicationController = class
 
       @triggerMethod("after:start", options)
 
-  routedAction: (action, params) ->
-    actionParts = action.split(":")
+  ###
+  Manage an action from the outside of the application controller or any of the modules
+  in the application controller.
+
+  For example, a navigation bar can trigger an action like ´<moduleName>:<actionName>´ and this
+  method will retrieve the module and the action to run. Once done, an `Admin.Action` is created
+  to represent the action to run.
+
+  @param {String} actionName The name of the action with the format: `<moduleName>:<actionName>`
+  @param {Boolean} changeRoute Define if the route in the navigation bar must change or not
+  @param {Object} options A set of options to complete the path in the navigation bar
+                          and/or used by the action execution
+  ###
+  actionFromOutside = (actionName, changeRoute, options) ->
+    actionParts = actionName.split(":")
 
     module = @modules[actionParts[0]]
+    action = if actionParts[1] is undefined then "main" else actionParts[1]
 
-    return if module is undefined
+    @action ActionFactory.outsideAction(changeRoute, module, action, options) unless module is undefined
 
-    @action ActionFactory.action(module, actionParts[1]), params
 
-  routeAction: (action, params) ->
-    actionParts = action.split(":")
+  actionFromRouter = (actionName, options) ->
+    actionParts = actionName.split(":")
 
     module = @modules[actionParts[0]]
+    action = if actionParts[1] is undefined then "main" else actionParts[1]
 
-    @action ActionFactory.routableAction(module, actionParts[1]), params unless module is undefined
+    @action ActionFactory.action(module, action, options) unless module is undefined
 
 
-  action: (action, options) ->
-    result = action.module[action.actionName](options)
+
+
+
+
+
+
+
+
+  action: (action) ->
+    result = action.module[action.actionName](action.options)
 
 #    for name in @regionNames
 #      @[name].close()
@@ -111,7 +139,7 @@ Admin.ApplicationController = class
       unless @[key] is undefined
         @[key].show result[key]
 
-    @trigger "action:done", action, options
+    @trigger "action:done", action
 #  routableAction: (actionDescription, options) ->
 
 
@@ -120,7 +148,7 @@ Admin.ApplicationController = class
 #    @trigger "action:done"
 
 
-  actionDone: (action, options) ->
+  actionDone: (action) ->
     @router.navigate action.path() if not _.isNull(@router) and action.isRoutable
 
   ###
@@ -144,10 +172,7 @@ Admin.ApplicationController = class
     actions = _.chain(module.routableActions).pairs().sortBy(1).object().value()
 
     # Register the routes in the router without any callback. Callbacks are done via the route event.
-    unless _.isNull(@router)
-      for actionName, path of actions
-        moduleActionName = "#{module.name}:#{actionName}"
-        @router.route path, moduleActionName
+    @router.route path, "#{module.name}:#{actionName}" for actionName, path of actions unless _.isNull(@router)
 
     # Listen the event action on each module registered
     @listenTo module, "action", @action

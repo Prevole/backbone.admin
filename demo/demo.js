@@ -1,5 +1,5 @@
 (function() {
-  var BookCollection, BookGridLayout, BookHeaderView, BookModel, BookRowView, BooksModule, DataModel, FruitCollection, FruitGridLayout, FruitHeaderView, FruitModel, FruitRowView, FruitsModule, ModelCollection, NavigationView, Region1, Region2, appController, bookHeaderTemplate, bookModels, bookRowTemplate, books, booksData, fruitHeaderTemplate, fruitModels, fruitRowTemplate, fruits, fruitsData,
+  var AddFruitView, BookCollection, BookGridLayout, BookHeaderView, BookModel, BookRowView, BooksModule, DataModel, FruitCollection, FruitGridLayout, FruitHeaderView, FruitModel, FruitRowView, FruitsModule, ModelCollection, NavigationView, Region1, Region2, appController, bookHeaderTemplate, bookModels, bookRowTemplate, books, booksData, fruitHeaderTemplate, fruitModels, fruitRowTemplate, fruits, fruitsData,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -644,6 +644,24 @@
     }
   });
 
+  AddFruitView = Marionette.ItemView.extend({
+    template: "#fruitForm",
+    events: {
+      "click button": "addFruit"
+    },
+    ui: {
+      fruitName: "#fruitName"
+    },
+    addFruit: function(event) {
+      event.preventDefault();
+      fruitModels.push(new FruitModel({
+        id: _.random(0, 1000),
+        name: this.ui.fruitName.val()
+      }));
+      return this.trigger("add:done");
+    }
+  });
+
   /*
   ## FruitsModule
   
@@ -667,28 +685,19 @@
       edit: "fruits/edit/:id"
     };
 
+    _Class.prototype.initialize = function(options) {
+      return _Class.__super__.initialize.call(this, options);
+    };
+
     _Class.prototype.add = function() {
-      var AddFruitView, self;
-      self = this;
-      AddFruitView = Marionette.ItemView.extend({
-        template: "#fruitForm",
-        collection: fruits,
-        events: {
-          "click button": "addFruit"
-        },
-        ui: {
-          fruitName: "#fruitName"
-        },
-        addFruit: function(event) {
-          event.preventDefault();
-          fruitModels.push(new FruitModel({
-            name: this.ui.fruitName.val()
-          }));
-          return self.routableAction("main");
-        }
+      var addFruitView,
+        _this = this;
+      addFruitView = new AddFruitView();
+      addFruitView.on("add:done", function() {
+        return _this.routableAction("main");
       });
       return {
-        r1: new AddFruitView()
+        r1: addFruitView
       };
     };
 
@@ -696,7 +705,7 @@
       var EditFruitView, model, self;
       self = this;
       if (options.model === void 0) {
-        model = fruits.get(options[0]);
+        model = fruits.get(options.id);
       } else {
         model = options.model;
       }
@@ -801,6 +810,8 @@
       return _Class.__super__.constructor.apply(this, arguments);
     }
 
+    _Class.prototype.applicationController = appController;
+
     _Class.prototype.el = ".menu";
 
     return _Class;
@@ -836,9 +847,7 @@
   })(Marionette.Region);
 
   $(document).ready(function() {
-    new NavigationView({
-      applicationController: appController
-    });
+    new NavigationView();
     appController.registerRegion("r1", new Region1());
     appController.registerRegion("r2", new Region2());
     return appController.start();
