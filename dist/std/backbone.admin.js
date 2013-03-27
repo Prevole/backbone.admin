@@ -241,12 +241,23 @@ then the route to reach should not be available anymore. This is the reason why 
       };
 
       actionFromRouter = function(actionName, options) {
-        var action, actionParts, module;
+        var action, actionParts, index, module, namedOptions, parameterName, parameterNames, route, _i, _ref;
         actionParts = actionName.split(":");
         module = this.modules[actionParts[0]];
         action = actionParts[1] === void 0 ? "main" : actionParts[1];
+        route = module.routableActions[action];
+        parameterNames = route.match(/(\(\?)?:\w+/g);
+        namedOptions = {};
+        for (index = _i = 0, _ref = parameterNames.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; index = 0 <= _ref ? ++_i : --_i) {
+          parameterName = parameterNames[index].slice(1);
+          namedOptions[parameterName] = options[index];
+          options[index] = null;
+        }
+        namedOptions["remainingParameters"] = _.filter(options, function(value) {
+          return !_.isNull(value);
+        });
         if (module !== void 0) {
-          return this.action(ActionFactory.action(module, action, options));
+          return this.action(ActionFactory.action(module, action, namedOptions));
         }
       };
 
@@ -279,7 +290,7 @@ then the route to reach should not be available anymore. This is the reason why 
 
 
       _Class.prototype.registerModule = function(module) {
-        var actionName, actions, moduleActionName, path;
+        var actionName, actions, path;
         if (module === void 0) {
           throw new Error("The module cannot be undefined");
         }
@@ -294,8 +305,7 @@ then the route to reach should not be available anymore. This is the reason why 
         if (!_.isNull(this.router)) {
           for (actionName in actions) {
             path = actions[actionName];
-            moduleActionName = "" + module.name + ":" + actionName;
-            this.router.route(path, moduleActionName);
+            this.router.route(path, "" + module.name + ":" + actionName);
           }
         }
         return this.listenTo(module, "action", this.action);

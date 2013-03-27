@@ -118,7 +118,22 @@ Admin.ApplicationController = class
     module = @modules[actionParts[0]]
     action = if actionParts[1] is undefined then "main" else actionParts[1]
 
-    @action ActionFactory.action(module, action, options) unless module is undefined
+    unless module is undefined
+      route = module.routableActions[action]
+
+      parameterNames = route.match /(\(\?)?:\w+/g
+
+      namedOptions = {}
+
+      for index in [0 .. parameterNames.length - 1]
+        parameterName = parameterNames[index].slice(1)
+        namedOptions[parameterName] = options[index]
+        options[index] = null
+
+      namedOptions["remainingParameters"] = _.filter options, (value) ->
+        not _.isNull(value)
+
+      @action ActionFactory.action(module, action, namedOptions)
 
 
 
