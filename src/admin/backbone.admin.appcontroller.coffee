@@ -52,11 +52,14 @@ Admin.ApplicationController = class
     else
       @router = options.router
 
-    # Action triggered from outside (navigation bar for example)
-    @on "action:name", (actionName, changeRoute, parameters) =>
-      actionFromOutside.call @, actionName, changeRoute, parameters
+    # Actions triggered from outside (navigation bar for example)
+    @on "action:outside:route", (actionName, parameters) =>
+      actionFromOutside.call @, actionName, true, parameters
+    @on "action:outside:noroute", (actionName, parameters) =>
+      actionFromOutside.call @, actionName, false, parameters
 
-    @on "action:done", @actionDone
+    @on "action:done", (action) =>
+      actionDone.call @, action
 
     # Action triggered from the router when a certain route is browsed
     unless _.isNull(@router)
@@ -107,33 +110,56 @@ Admin.ApplicationController = class
     actionParts = actionName.split(":")
 
     module = @modules[actionParts[0]]
-    action = if actionParts[1] is undefined then "main" else actionParts[1]
+    actionMethod = if actionParts[1] is undefined then "main" else actionParts[1]
 
-    @action ActionFactory.outsideAction(changeRoute, module, action, options) unless module is undefined
+    action.call @, ActionFactory.outsideAction(changeRoute, module, actionMethod, options) unless module is undefined
 
+  ###
+  Manage an action triggered by `Backbone.History` events. This kind of action
+  required to execute an action from a module but not to change the route in
+  the navigation bar. The navigation bar is already up to date.
 
+  The action name correspond to the route name regisered in the `Backbone.Router`
+  object and the options is an array corresponding to the parameters contained in
+  the `URL`.
+
+  When it's possible, the options given to the action are mapped to parameter names
+  if there are some matching. The remaining option, are given in an array inside the
+  `options` object. The name associated to these remainings options is: ´_params´
+
+  @param {String} actionName The name of the action with the format: `<moduleName>.<actionName>`
+  @param {Array} options The list of options from the `URL`
+  ###
   actionFromRouter = (actionName, options) ->
     actionParts = actionName.split(":")
 
     module = @modules[actionParts[0]]
-    action = if actionParts[1] is undefined then "main" else actionParts[1]
+    actionMethod = if actionParts[1] is undefined then "main" else actionParts[1]
 
     unless module is undefined
-      route = module.routableActions[action]
-
-      parameterNames = route.match /(\(\?)?:\w+/g
-
       namedOptions = {}
 
-      for index in [0 .. parameterNames.length - 1]
-        parameterName = parameterNames[index].slice(1)
-        namedOptions[parameterName] = options[index]
-        options[index] = null
+      # Get the action route configured in the module
+      route = module.routableActions[actionMethod]
 
-      namedOptions["remainingParameters"] = _.filter options, (value) ->
+      # If there is a route
+      unless route is undefined
+        # Retrieve the parameter names. WARNING: The regex comes from `Backbone.History`
+        parameterNames = route.match /(\(\?)?:\w+/g
+
+        # Associate each parameter value to its name
+        unless _.isNull(parameterNames)
+          for index in [0 .. parameterNames.length - 1]
+            parameterName = parameterNames[index].slice(1)
+            namedOptions[parameterName] = options[index]
+            options[index] = null
+
+      # The remaining options have no names and are given in the same order received
+      namedOptions["_params"] = _.filter options, (value) ->
         not _.isNull(value)
 
-      @action ActionFactory.action(module, action, namedOptions)
+      # Run the action
+      action.call @, ActionFactory.action(module, actionMethod, namedOptions)
 
 
 
@@ -144,26 +170,22 @@ Admin.ApplicationController = class
 
 
 
-  action: (action) ->
+  action = (action) ->
     result = action.module[action.actionName](action.options)
 
-#    for name in @regionNames
-#      @[name].close()
+    unless _.isNull(result)
+  #    for name in @regionNames
+  #      @[name].close()
 
-    for key in _.keys(result)
-      unless @[key] is undefined
-        @[key].show result[key]
+      for key in _.keys(result)
+        unless @[key] is undefined
+          @[key].show result[key]
 
-    @trigger "action:done", action
-#  routableAction: (actionDescription, options) ->
-
-
-#  action: (action, options) ->
-#    @executeAction action, options
-#    @trigger "action:done"
+      @trigger "action:done", action
 
 
-  actionDone: (action) ->
+
+  actionDone = (action) ->
     @router.navigate action.path() if not _.isNull(@router) and action.isRoutable
 
   ###
@@ -190,7 +212,8 @@ Admin.ApplicationController = class
     @router.route path, "#{module.name}:#{actionName}" for actionName, path of actions unless _.isNull(@router)
 
     # Listen the event action on each module registered
-    @listenTo module, "action", @action
+    @listenTo module, "action:module", (moduleAction) =>
+      action.call @, moduleAction
 
   registerRegion: (name, region) ->
     throw new Error "The region #{name} is already registered" unless @[name] is undefined

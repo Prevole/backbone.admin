@@ -6,8 +6,8 @@ Admin.Module = Marionette.Controller.extend
     @baseUrl = "/#{@name.replace(/:/g, "/")}" if @baseUrl is undefined
 
   routableAction: (actionName, pathParameters, options) ->
-    @trigger "action", ActionFactory.routableAction(@, actionName, pathParameters), options
+    @trigger "action:module", ActionFactory.routeAction(@, actionName, pathParameters), options
 
   action: (actionName, options) ->
-    @trigger "action", ActionFactory.action(@, actionName), options
+    @trigger "action:module", ActionFactory.action(@, actionName, options)
 

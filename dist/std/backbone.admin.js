@@ -98,17 +98,17 @@ then the route to reach should not be available anymore. This is the reason why 
 
       function _Class() {}
 
-      _Class.prototype.routableAction = function(module, actionName, options) {
-        return new Action(true, module, actionName, options);
-      };
-
       _Class.prototype.action = function(module, actionName, options) {
         return new Action(false, module, actionName, options);
       };
 
+      _Class.prototype.routeAction = function(module, actionName, options) {
+        return new Action(true, module, actionName, options);
+      };
+
       _Class.prototype.outsideAction = function(changeRoute, module, actionName, options) {
         if (changeRoute) {
-          return this.routableAction(module, actionName, options);
+          return this.routeAction(module, actionName, options);
         } else {
           return this.action(module, actionName, options);
         }
@@ -128,7 +128,7 @@ then the route to reach should not be available anymore. This is the reason why 
     */
 
     Admin.ApplicationController = (function() {
-      var actionFromOutside, actionFromRouter;
+      var action, actionDone, actionFromOutside, actionFromRouter;
 
       _Class.prototype.initializers = new Marionette.Callbacks();
 
@@ -170,10 +170,15 @@ then the route to reach should not be available anymore. This is the reason why 
         } else {
           this.router = options.router;
         }
-        this.on("action:name", function(actionName, changeRoute, parameters) {
-          return actionFromOutside.call(_this, actionName, changeRoute, parameters);
+        this.on("action:outside:route", function(actionName, parameters) {
+          return actionFromOutside.call(_this, actionName, true, parameters);
         });
-        this.on("action:done", this.actionDone);
+        this.on("action:outside:noroute", function(actionName, parameters) {
+          return actionFromOutside.call(_this, actionName, false, parameters);
+        });
+        this.on("action:done", function(action) {
+          return actionDone.call(_this, action);
+        });
         if (!_.isNull(this.router)) {
           this.listenTo(this.router, "route", function(actionName, options) {
             return actionFromRouter.call(_this, actionName, options);
@@ -231,50 +236,74 @@ then the route to reach should not be available anymore. This is the reason why 
 
 
       actionFromOutside = function(actionName, changeRoute, options) {
-        var action, actionParts, module;
+        var actionMethod, actionParts, module;
         actionParts = actionName.split(":");
         module = this.modules[actionParts[0]];
-        action = actionParts[1] === void 0 ? "main" : actionParts[1];
+        actionMethod = actionParts[1] === void 0 ? "main" : actionParts[1];
         if (module !== void 0) {
-          return this.action(ActionFactory.outsideAction(changeRoute, module, action, options));
+          return action.call(this, ActionFactory.outsideAction(changeRoute, module, actionMethod, options));
         }
       };
+
+      /*
+      Manage an action triggered by `Backbone.History` events. This kind of action
+      required to execute an action from a module but not to change the route in
+      the navigation bar. The navigation bar is already up to date.
+        
+      The action name correspond to the route name regisered in the `Backbone.Router`
+      object and the options is an array corresponding to the parameters contained in
+      the `URL`.
+        
+      When it's possible, the options given to the action are mapped to parameter names
+      if there are some matching. The remaining option, are given in an array inside the
+      `options` object. The name associated to these remainings options is: ´_params´
+        
+      @param {String} actionName The name of the action with the format: `<moduleName>.<actionName>`
+      @param {Array} options The list of options from the `URL`
+      */
+
 
       actionFromRouter = function(actionName, options) {
-        var action, actionParts, index, module, namedOptions, parameterName, parameterNames, route, _i, _ref;
+        var actionMethod, actionParts, index, module, namedOptions, parameterName, parameterNames, route, _i, _ref;
         actionParts = actionName.split(":");
         module = this.modules[actionParts[0]];
-        action = actionParts[1] === void 0 ? "main" : actionParts[1];
-        route = module.routableActions[action];
-        parameterNames = route.match(/(\(\?)?:\w+/g);
-        namedOptions = {};
-        for (index = _i = 0, _ref = parameterNames.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; index = 0 <= _ref ? ++_i : --_i) {
-          parameterName = parameterNames[index].slice(1);
-          namedOptions[parameterName] = options[index];
-          options[index] = null;
-        }
-        namedOptions["remainingParameters"] = _.filter(options, function(value) {
-          return !_.isNull(value);
-        });
+        actionMethod = actionParts[1] === void 0 ? "main" : actionParts[1];
         if (module !== void 0) {
-          return this.action(ActionFactory.action(module, action, namedOptions));
+          namedOptions = {};
+          route = module.routableActions[actionMethod];
+          if (route !== void 0) {
+            parameterNames = route.match(/(\(\?)?:\w+/g);
+            if (!_.isNull(parameterNames)) {
+              for (index = _i = 0, _ref = parameterNames.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; index = 0 <= _ref ? ++_i : --_i) {
+                parameterName = parameterNames[index].slice(1);
+                namedOptions[parameterName] = options[index];
+                options[index] = null;
+              }
+            }
+          }
+          namedOptions["_params"] = _.filter(options, function(value) {
+            return !_.isNull(value);
+          });
+          return action.call(this, ActionFactory.action(module, actionMethod, namedOptions));
         }
       };
 
-      _Class.prototype.action = function(action) {
+      action = function(action) {
         var key, result, _i, _len, _ref;
         result = action.module[action.actionName](action.options);
-        _ref = _.keys(result);
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          key = _ref[_i];
-          if (this[key] !== void 0) {
-            this[key].show(result[key]);
+        if (!_.isNull(result)) {
+          _ref = _.keys(result);
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            key = _ref[_i];
+            if (this[key] !== void 0) {
+              this[key].show(result[key]);
+            }
           }
+          return this.trigger("action:done", action);
         }
-        return this.trigger("action:done", action);
       };
 
-      _Class.prototype.actionDone = function(action) {
+      actionDone = function(action) {
         if (!_.isNull(this.router) && action.isRoutable) {
           return this.router.navigate(action.path());
         }
@@ -290,7 +319,8 @@ then the route to reach should not be available anymore. This is the reason why 
 
 
       _Class.prototype.registerModule = function(module) {
-        var actionName, actions, path;
+        var actionName, actions, path,
+          _this = this;
         if (module === void 0) {
           throw new Error("The module cannot be undefined");
         }
@@ -308,7 +338,9 @@ then the route to reach should not be available anymore. This is the reason why 
             this.router.route(path, "" + module.name + ":" + actionName);
           }
         }
-        return this.listenTo(module, "action", this.action);
+        return this.listenTo(module, "action:module", function(moduleAction) {
+          return action.call(_this, moduleAction);
+        });
       };
 
       _Class.prototype.registerRegion = function(name, region) {
@@ -346,7 +378,7 @@ then the route to reach should not be available anymore. This is the reason why 
 
       _Class.prototype.action = function(event) {
         event.preventDefault();
-        return this.applicationController.trigger("action:name", $(event.target).attr("data-action"), true);
+        return this.applicationController.trigger("action:outside:route", $(event.target).attr("data-action"));
       };
 
       return _Class;
@@ -365,10 +397,10 @@ then the route to reach should not be available anymore. This is the reason why 
         }
       },
       routableAction: function(actionName, pathParameters, options) {
-        return this.trigger("action", ActionFactory.routableAction(this, actionName, pathParameters), options);
+        return this.trigger("action:module", ActionFactory.routeAction(this, actionName, pathParameters), options);
       },
       action: function(actionName, options) {
-        return this.trigger("action", ActionFactory.action(this, actionName), options);
+        return this.trigger("action:module", ActionFactory.action(this, actionName, options));
       }
     });
     Admin.CrudModule = Admin.Module.extend({

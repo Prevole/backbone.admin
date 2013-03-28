@@ -12,4 +12,4 @@ Admin.NavigationView = class extends Marionette.View
   action: (event) ->
     event.preventDefault()
 
-    @applicationController.trigger "action:name", $(event.target).attr("data-action"), true
+    @applicationController.trigger "action:outside:route", $(event.target).attr("data-action")

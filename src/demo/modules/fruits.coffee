@@ -141,7 +141,7 @@ FruitsModule = class extends Admin.Module
       editFruit: (event) ->
         event.preventDefault()
 
-        options.model.set("name", @ui.fruitName.val())
+        @model.set("name", @ui.fruitName.val())
 #        fruitModels.push new FruitModel({name: @ui.fruitName.val()})
 
         self.routableAction("main")
@@ -156,6 +156,7 @@ FruitsModule = class extends Admin.Module
       fruit.get("id") == options.model.get("id")
 
     fruits.refresh()
+    return null
 #    @action "main"
 
   main: ->
@@ -183,7 +184,8 @@ FruitsModule = class extends Admin.Module
             @$el.modal("hide")
 
           yes: (event) ->
-            @no(event)
+            event.preventDefault()
+            @$el.modal("hide")
             self.action "delete", {model: @model}
 
           setModel: (model) ->

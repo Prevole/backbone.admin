@@ -720,7 +720,7 @@
         },
         editFruit: function(event) {
           event.preventDefault();
-          options.model.set("name", this.ui.fruitName.val());
+          this.model.set("name", this.ui.fruitName.val());
           return self.routableAction("main");
         },
         onRender: function() {
@@ -736,7 +736,8 @@
       fruitModels = _.reject(fruitModels, function(fruit) {
         return fruit.get("id") === options.model.get("id");
       });
-      return fruits.refresh();
+      fruits.refresh();
+      return null;
     };
 
     _Class.prototype.main = function() {
@@ -768,7 +769,8 @@
               return this.$el.modal("hide");
             },
             yes: function(event) {
-              this.no(event);
+              event.preventDefault();
+              this.$el.modal("hide");
               return self.action("delete", {
                 model: this.model
               });
