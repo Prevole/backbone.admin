@@ -44,13 +44,10 @@ then the route to reach should not be available anymore. This is the reason why 
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   window.Backbone.Admin = window.Admin = (function(Backbone, Marionette, _, $) {
-    var Action, ActionFactory, Admin, applicationStarted, authorizator, i18nKeys, initialized, moduleNamePattern;
+    var Action, ActionFactory, Admin, authorizator, i18nKeys;
     Admin = {
       version: "0.0.1"
     };
-    applicationStarted = false;
-    initialized = false;
-    moduleNamePattern = new RegExp(/[a-z]+(:[a-z]+)*/);
     authorizator = null;
     Action = (function() {
 
@@ -319,7 +316,7 @@ then the route to reach should not be available anymore. This is the reason why 
 
 
       _Class.prototype.registerModule = function(module) {
-        var actionName, actions, path,
+        var actionName, actions, basePath, fReduce, path,
           _this = this;
         if (module === void 0) {
           throw new Error("The module cannot be undefined");
@@ -331,7 +328,12 @@ then the route to reach should not be available anymore. This is the reason why 
           throw new Error("The module is already registered");
         }
         this.modules[module.name] = module;
-        actions = _.chain(module.routableActions).pairs().sortBy(1).object().value();
+        basePath = _.str.endsWith(module.baseUrl, "/") ? module.baseUrl : "" + module.baseUrl + "/";
+        fReduce = function(memo, value, key) {
+          return memo[key] = value === "" ? module.baseUrl : memo[key] = "" + basePath + value;
+        };
+        actions = _.chain(module.routableActions).reduce(fReduce, {}).tap(console.log).pairs().sortBy(1).object().value();
+        console.log(actions);
         if (!_.isNull(this.router)) {
           for (actionName in actions) {
             path = actions[actionName];
@@ -393,7 +395,7 @@ then the route to reach should not be available anymore. This is the reason why 
           throw new Error("At least one routable action must be defined");
         }
         if (this.baseUrl === void 0) {
-          return this.baseUrl = "/" + (this.name.replace(/:/g, "/"));
+          return this.baseUrl = "" + (this.name.replace(/:/g, "/"));
         }
       },
       routableAction: function(actionName, pathParameters, options) {
@@ -459,132 +461,6 @@ then the route to reach should not be available anymore. This is the reason why 
 
     Admin.setupDefaultI18nBindings = function(options) {
       return i18nKeys = _.defaults(options.i18n || {}, i18nKeys);
-    };
-    Admin.StatedCollection = Backbone.Collection.extend({
-      initialize: function(options) {
-        return this.current = _.defaults({}, {
-          page: 1,
-          ipp: 2,
-          quickSearch: "",
-          sorting: {}
-        });
-      },
-      sync: function(method, model, options) {
-        var queryOptions, storedSuccess,
-          _this = this;
-        storedSuccess = options.success;
-        options.success = function(collection, response) {
-          storedSuccess(collection, response);
-          return _this.trigger("fetched");
-        };
-        queryOptions = _.extend({}, {
-          jsonpCallback: 'callback',
-          timeout: 25000,
-          cache: false,
-          type: 'GET',
-          dataType: 'json',
-          processData: false,
-          url: this.url,
-          headers: {
-            "X-Grid-Parameters": JSON.stringify(this.current)
-          }
-        }, options);
-        return $.ajax(queryOptions);
-      },
-      parse: function(response, xhr) {
-        var info;
-        info = response.info;
-        this.current.records = info.records;
-        this.current.pages = info.pages;
-        this.current.filteredRecords = info.filteredRecords;
-        this.current.filteredPages = info.filteredPages;
-        this.current.from = (this.current.page - 1) * this.current.ipp + 1;
-        this.current.to = this.current.from + this.current.ipp - 1;
-        if (this.current.to > this.current.filteredRecords) {
-          this.current.to = this.current.filteredRecords;
-        }
-        if (this.current.page > this.current.filteredPages && this.current.filteredPages > 0) {
-          this.current.page = this.current.filteredPages;
-          this.fetch();
-        }
-        return response.data;
-      },
-      refresh: function() {
-        this.reset();
-        return this.fetch();
-      },
-      getInfo: function() {
-        return this.current;
-      },
-      updateInfo: function(options) {
-        this.current = _.defaults(options, this.current);
-        return this.fetch();
-      }
-    });
-    Admin.instanciateModule = function(options) {
-      var module;
-      if (applicationStarted) {
-        throw new Error("Application already started, it is not possible to register more modules.");
-      } else {
-        module = new ModuleController(options);
-        return mainController.registerModule(module);
-      }
-    };
-    Admin.init = function(options) {
-      initialized = true;
-      options = options || {};
-      if (options.authorizator) {
-        return authorizator = new options.authorizator();
-      } else {
-        return authorizator = new Admin.Authorizator();
-      }
-    };
-    Admin.start = function(options) {
-      var CRUDApplication, mainRegion, navigationViewClass, router, switchModule;
-      if (!initialized) {
-        Admin.init();
-      }
-      applicationStarted = true;
-      if (options === void 0) {
-        throw new Error("No option defined when some are required.");
-      }
-      if (options.mainRegion === void 0) {
-        mainRegion = Admin.MainRegion;
-      } else {
-        mainRegion = options.mainRegion;
-      }
-      if (options.navigationView != null) {
-        navigationViewClass = options.navigationView;
-      } else {
-        navigationViewClass = Admin.NavigationView;
-      }
-      router = new Backbone.Router();
-      switchModule = function(moduleName) {
-        router.route(moduleName, moduleName, function() {
-          return alert(moduleName);
-        });
-        return router.navigate(moduleName, {
-          trigger: true
-        });
-      };
-      CRUDApplication = new Marionette.Application();
-      CRUDApplication.on("initialize:after", function() {
-        return Backbone.history.start({
-          pushState: true
-        });
-      });
-      gvent.on("changeView", function(view) {
-        return CRUDApplication.mainRegion.show(view);
-      });
-      CRUDApplication.addInitializer(function() {
-        var navigationView;
-        navigationView = new navigationViewClass();
-        navigationView.on("navigate:switchModule", switchModule);
-        return this.addRegions({
-          mainRegion: mainRegion
-        });
-      });
-      return CRUDApplication.start();
     };
     Admin.can = function(action, subject) {
       return authorizator.can(action, subject);

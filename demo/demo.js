@@ -680,9 +680,9 @@
     _Class.prototype.name = "fruits";
 
     _Class.prototype.routableActions = {
-      main: "fruits",
-      add: "fruits/add",
-      edit: "fruits/edit/:id"
+      main: "",
+      add: "add",
+      edit: "edit/:id"
     };
 
     _Class.prototype.initialize = function(options) {

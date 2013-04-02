@@ -206,7 +206,17 @@ Admin.ApplicationController = class
 
     # Get all the actions declared in the module and prepare them to create the related routes
     # TODO: Be sure to differentiate the routable and the non-routable actions (delete should not be a routable action)
-    actions = _.chain(module.routableActions).pairs().sortBy(1).object().value()
+    basePath = if _.str.endsWith(module.baseUrl, "/") then module.baseUrl else "#{module.baseUrl}/"
+
+    fReduce = (memo, value, key) ->
+      memo[key] = if value == "" then module.baseUrl else memo[key] = "#{basePath}#{value}"
+
+    actions = _.chain(module.routableActions)
+      .reduce(fReduce, {})
+      .pairs()
+      .sortBy(1)
+      .object()
+      .value()
 
     # Register the routes in the router without any callback. Callbacks are done via the route event.
     @router.route path, "#{module.name}:#{actionName}" for actionName, path of actions unless _.isNull(@router)

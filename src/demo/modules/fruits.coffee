@@ -105,9 +105,9 @@ FruitsModule = class extends Admin.Module
   name: "fruits"
 
   routableActions:
-    main:   "fruits"
-    add:    "fruits/add"
-    edit:   "fruits/edit/:id"
+    main:   ""
+    add:    "add"
+    edit:   "edit/:id"
 
   initialize: (options) ->
     super(options)

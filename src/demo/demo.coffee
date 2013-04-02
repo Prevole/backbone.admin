@@ -31,12 +31,6 @@
 #    else
 #      super view
 
-#$(document).ready ->
-#  Admin.start(
-#    navigationView: NavigationView
-#    mainRegion: MainRegion
-#  )
-
 #Layout2 = class extends Marionette.Layout
 ##  el: ".content2"
 #  template: "#test",
@@ -48,8 +42,6 @@
 #    a2:
 #      selector: "#a2"
 #      regionType: class extends Marionette.Region
-
-
 
 #    Test = Backbone.View.extend
 ##      el: ".content"

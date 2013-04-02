@@ -95,6 +95,7 @@ module.exports = (grunt) ->
           'demo/js/json2.js'
           'demo/js/jquery.js'
           'demo/js/underscore.js'
+          'demo/js/underscore.string.js'
           'demo/js/backbone.js'
           'demo/js/backbone.marionette.js'
           'dist/std/backbone.admin.js'
