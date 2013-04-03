@@ -209,7 +209,14 @@ Admin.ApplicationController = class
     basePath = if _.str.endsWith(module.baseUrl, "/") then module.baseUrl else "#{module.baseUrl}/"
 
     fReduce = (memo, value, key) ->
-      memo[key] = if value == "" then module.baseUrl else memo[key] = "#{basePath}#{value}"
+      if value == ""
+        memo[key] = basePath.substring(0, basePath.length - 1)
+      else if _.str.startsWith value, "/"
+        memo[key] = "#{basePath.substring(0, basePath.length - 1)}#{value}"
+      else
+        memo[key] = "#{basePath}#{value}"
+
+      memo
 
     actions = _.chain(module.routableActions)
       .reduce(fReduce, {})

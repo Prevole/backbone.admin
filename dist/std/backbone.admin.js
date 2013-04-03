@@ -330,10 +330,16 @@ then the route to reach should not be available anymore. This is the reason why 
         this.modules[module.name] = module;
         basePath = _.str.endsWith(module.baseUrl, "/") ? module.baseUrl : "" + module.baseUrl + "/";
         fReduce = function(memo, value, key) {
-          return memo[key] = value === "" ? module.baseUrl : memo[key] = "" + basePath + value;
+          if (value === "") {
+            memo[key] = basePath.substring(0, basePath.length - 1);
+          } else if (_.str.startsWith(value, "/")) {
+            memo[key] = "" + (basePath.substring(0, basePath.length - 1)) + value;
+          } else {
+            memo[key] = "" + basePath + value;
+          }
+          return memo;
         };
-        actions = _.chain(module.routableActions).reduce(fReduce, {}).tap(console.log).pairs().sortBy(1).object().value();
-        console.log(actions);
+        actions = _.chain(module.routableActions).reduce(fReduce, {}).pairs().sortBy(1).object().value();
         if (!_.isNull(this.router)) {
           for (actionName in actions) {
             path = actions[actionName];
