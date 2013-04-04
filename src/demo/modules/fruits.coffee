@@ -104,7 +104,7 @@ The book module that manages the different actions related to the fruits
 FruitsModule = class extends Admin.Module
   name: "fruits"
 
-  routableActions:
+  routeActions:
     main:   ""
     add:    "add"
     edit:   "edit/:id"

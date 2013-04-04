@@ -403,9 +403,9 @@
 
     _Class.prototype.name = "books";
 
-    _Class.prototype.routableActions = {
-      main: "books",
-      add: "books/add"
+    _Class.prototype.routeActions = {
+      main: "",
+      add: "add"
     };
 
     _Class.prototype.main = function() {
@@ -679,7 +679,7 @@
 
     _Class.prototype.name = "fruits";
 
-    _Class.prototype.routableActions = {
+    _Class.prototype.routeActions = {
       main: "",
       add: "add",
       edit: "edit/:id"

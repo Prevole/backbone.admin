@@ -74,18 +74,18 @@ then the route to reach should not be available anymore. This is the reason why 
         }
       }
 
-      _Class.prototype.path = function() {
-        var key, path, value, _ref;
-        if (this.module.routableActions[this.actionName] === void 0) {
+      _Class.prototype.route = function() {
+        var key, route, value, _ref;
+        if (this.module.routeActions[this.actionName] === void 0) {
           return;
         }
-        path = this.module.routableActions[this.actionName];
+        route = this.module.route(this.actionName);
         _ref = this.options;
         for (key in _ref) {
           value = _ref[key];
-          path = path.replace(":" + key, value);
+          route = route.replace(":" + key, value);
         }
-        return path;
+        return route;
       };
 
       return _Class;
@@ -267,7 +267,7 @@ then the route to reach should not be available anymore. This is the reason why 
         actionMethod = actionParts[1] === void 0 ? "main" : actionParts[1];
         if (module !== void 0) {
           namedOptions = {};
-          route = module.routableActions[actionMethod];
+          route = module.route(actionMethod);
           if (route !== void 0) {
             parameterNames = route.match(/(\(\?)?:\w+/g);
             if (!_.isNull(parameterNames)) {
@@ -302,7 +302,7 @@ then the route to reach should not be available anymore. This is the reason why 
 
       actionDone = function(action) {
         if (!_.isNull(this.router) && action.isRoutable) {
-          return this.router.navigate(action.path());
+          return this.router.navigate(action.route());
         }
       };
 
@@ -316,7 +316,7 @@ then the route to reach should not be available anymore. This is the reason why 
 
 
       _Class.prototype.registerModule = function(module) {
-        var actionName, actions, basePath, fReduce, path,
+        var actionName, path, _ref,
           _this = this;
         if (module === void 0) {
           throw new Error("The module cannot be undefined");
@@ -328,21 +328,10 @@ then the route to reach should not be available anymore. This is the reason why 
           throw new Error("The module is already registered");
         }
         this.modules[module.name] = module;
-        basePath = _.str.endsWith(module.baseUrl, "/") ? module.baseUrl : "" + module.baseUrl + "/";
-        fReduce = function(memo, value, key) {
-          if (value === "") {
-            memo[key] = basePath.substring(0, basePath.length - 1);
-          } else if (_.str.startsWith(value, "/")) {
-            memo[key] = "" + (basePath.substring(0, basePath.length - 1)) + value;
-          } else {
-            memo[key] = "" + basePath + value;
-          }
-          return memo;
-        };
-        actions = _.chain(module.routableActions).reduce(fReduce, {}).pairs().sortBy(1).object().value();
         if (!_.isNull(this.router)) {
-          for (actionName in actions) {
-            path = actions[actionName];
+          _ref = module.routes();
+          for (actionName in _ref) {
+            path = _ref[actionName];
             this.router.route(path, "" + module.name + ":" + actionName);
           }
         }
@@ -397,11 +386,30 @@ then the route to reach should not be available anymore. This is the reason why 
         if (this.name === void 0) {
           throw new Error("The name of the module must be defined");
         }
-        if (this.routableActions === void 0) {
-          throw new Error("At least one routable action must be defined");
+        if (this.routeActions === void 0) {
+          throw new Error("At least one route action must be defined");
         }
-        if (this.baseUrl === void 0) {
-          return this.baseUrl = "" + (this.name.replace(/:/g, "/"));
+        if (this.basePath === void 0) {
+          this.basePath = "" + (this.name.replace(/:/g, "/"));
+        }
+        return this.basePath = _.str.endsWith(this.basePath, "/") ? this.basePath : "" + this.basePath + "/";
+      },
+      routes: function() {
+        var fReduce,
+          _this = this;
+        fReduce = function(memo, value, key) {
+          memo[key] = _this.route(key);
+          return memo;
+        };
+        return _.chain(_.reduce(this.routeActions, fReduce, {})).pairs().sortBy(1).object().value();
+      },
+      route: function(actionName) {
+        var route;
+        route = this.routeActions[actionName];
+        if (route === '') {
+          return _.str.rtrim(this.basePath, '/');
+        } else {
+          return "" + this.basePath + (_.str.ltrim(route, '/'));
         }
       },
       routableAction: function(actionName, pathParameters, options) {

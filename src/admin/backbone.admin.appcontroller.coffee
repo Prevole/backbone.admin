@@ -140,7 +140,7 @@ Admin.ApplicationController = class
       namedOptions = {}
 
       # Get the action route configured in the module
-      route = module.routableActions[actionMethod]
+      route = module.route actionMethod
 
       # If there is a route
       unless route is undefined
@@ -186,7 +186,7 @@ Admin.ApplicationController = class
 
 
   actionDone = (action) ->
-    @router.navigate action.path() if not _.isNull(@router) and action.isRoutable
+    @router.navigate action.route() if not _.isNull(@router) and action.isRoutable
 
   ###
   Allow to register a module. When this function is called, the action that can be routed
@@ -204,29 +204,8 @@ Admin.ApplicationController = class
     # Register the module
     @modules[module.name] = module
 
-    # Get all the actions declared in the module and prepare them to create the related routes
-    # TODO: Be sure to differentiate the routable and the non-routable actions (delete should not be a routable action)
-    basePath = if _.str.endsWith(module.baseUrl, "/") then module.baseUrl else "#{module.baseUrl}/"
-
-    fReduce = (memo, value, key) ->
-      if value == ""
-        memo[key] = basePath.substring(0, basePath.length - 1)
-      else if _.str.startsWith value, "/"
-        memo[key] = "#{basePath.substring(0, basePath.length - 1)}#{value}"
-      else
-        memo[key] = "#{basePath}#{value}"
-
-      memo
-
-    actions = _.chain(module.routableActions)
-      .reduce(fReduce, {})
-      .pairs()
-      .sortBy(1)
-      .object()
-      .value()
-
     # Register the routes in the router without any callback. Callbacks are done via the route event.
-    @router.route path, "#{module.name}:#{actionName}" for actionName, path of actions unless _.isNull(@router)
+    @router.route path, "#{module.name}:#{actionName}" for actionName, path of module.routes() unless _.isNull(@router)
 
     # Listen the event action on each module registered
     @listenTo module, "action:module", (moduleAction) =>

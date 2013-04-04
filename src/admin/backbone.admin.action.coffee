@@ -13,12 +13,12 @@ Action = class
     @actionName = actionName unless actionName is undefined
     @options = options unless options is undefined
 
-  path: ->
-    return if @module.routableActions[@actionName] is undefined
+  route: ->
+    return if @module.routeActions[@actionName] is undefined
 
-    path = @module.routableActions[@actionName]
+    route = @module.route @actionName
 
     for key, value of @options
-      path = path.replace(":#{key}", value)
+      route = route.replace(":#{key}", value)
 
-    path
+    route

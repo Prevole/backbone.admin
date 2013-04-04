@@ -93,9 +93,9 @@ The book module that manages the different actions related to the books
 BooksModule = class extends Admin.Module
   name: "books"
 
-  routableActions:
-    main:   "books"
-    add:    "books/add"
+  routeActions:
+    main:   ""
+    add:    "add"
 
   main: ->
     {
