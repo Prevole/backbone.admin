@@ -1,13 +1,13 @@
 ActionFactory = new (class
-  action: (module, actionName, options) ->
-    new Action(false, module, actionName, options)
+  action: (module, name, options) ->
+    new Action(false, module, name, options)
 
-  routeAction: (module, actionName, options) ->
-    new Action(true, module, actionName, options)
+  routeAction: (module, name, options) ->
+    new Action(true, module, name, options)
 
-  outsideAction: (changeRoute, module, actionName, options) ->
+  outsideAction: (changeRoute, module, name, options) ->
     if changeRoute
-      @routeAction module, actionName, options
+      @routeAction module, name, options
     else
-      @action module, actionName, options
+      @action module, name, options
 )()

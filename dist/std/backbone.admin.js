@@ -49,25 +49,45 @@ then the route to reach should not be available anymore. This is the reason why 
       version: "0.0.1"
     };
     authorizator = null;
+    _.mixin({
+      view: function(view) {
+        return _.object(["view"], [view]);
+      },
+      model: function(collection, action) {
+        if (action === void 0) {
+          throw new Error("Action must be defined");
+        }
+        if (action.options === void 0) {
+          throw new Error("Options in action must be defined");
+        }
+        if (action.options.model === void 0) {
+          return collection.get(action.options.id);
+        } else {
+          return action.options.model;
+        }
+      }
+    });
     Action = (function() {
 
       _Class.prototype.module = null;
 
-      _Class.prototype.actionName = "main";
+      _Class.prototype.name = "main";
 
       _Class.prototype.options = {};
 
       _Class.prototype.isRoutable = false;
 
-      function _Class(isRoutable, module, actionName, options) {
+      _Class.prototype.updatedRegions = {};
+
+      function _Class(isRoutable, module, name, options) {
         this.isRoutable = isRoutable;
         this.module = module;
         if (this.module === void 0) {
           throw new Error("The module must be defined");
         }
         this.moduleName = this.module.name;
-        if (actionName !== void 0) {
-          this.actionName = actionName;
+        if (name !== void 0) {
+          this.name = name;
         }
         if (options !== void 0) {
           this.options = options;
@@ -76,10 +96,10 @@ then the route to reach should not be available anymore. This is the reason why 
 
       _Class.prototype.route = function() {
         var key, route, value, _ref;
-        if (this.module.routeActions[this.actionName] === void 0) {
+        if (this.module.routeActions[this.name] === void 0) {
           return;
         }
-        route = this.module.route(this.actionName);
+        route = this.module.route(this.name);
         _ref = this.options;
         for (key in _ref) {
           value = _ref[key];
@@ -95,19 +115,19 @@ then the route to reach should not be available anymore. This is the reason why 
 
       function _Class() {}
 
-      _Class.prototype.action = function(module, actionName, options) {
-        return new Action(false, module, actionName, options);
+      _Class.prototype.action = function(module, name, options) {
+        return new Action(false, module, name, options);
       };
 
-      _Class.prototype.routeAction = function(module, actionName, options) {
-        return new Action(true, module, actionName, options);
+      _Class.prototype.routeAction = function(module, name, options) {
+        return new Action(true, module, name, options);
       };
 
-      _Class.prototype.outsideAction = function(changeRoute, module, actionName, options) {
+      _Class.prototype.outsideAction = function(changeRoute, module, name, options) {
         if (changeRoute) {
-          return this.routeAction(module, actionName, options);
+          return this.routeAction(module, name, options);
         } else {
-          return this.action(module, actionName, options);
+          return this.action(module, name, options);
         }
       };
 
@@ -125,7 +145,7 @@ then the route to reach should not be available anymore. This is the reason why 
     */
 
     Admin.ApplicationController = (function() {
-      var action, actionDone, actionFromOutside, actionFromRouter;
+      var action, actionExecuted, actionFromOutside, actionFromRouter;
 
       _Class.prototype.initializers = new Marionette.Callbacks();
 
@@ -172,9 +192,6 @@ then the route to reach should not be available anymore. This is the reason why 
         });
         this.on("action:outside:noroute", function(actionName, parameters) {
           return actionFromOutside.call(_this, actionName, false, parameters);
-        });
-        this.on("action:done", function(action) {
-          return actionDone.call(_this, action);
         });
         if (!_.isNull(this.router)) {
           this.listenTo(this.router, "route", function(actionName, options) {
@@ -286,23 +303,24 @@ then the route to reach should not be available anymore. This is the reason why 
       };
 
       action = function(action) {
-        var key, result, _i, _len, _ref;
-        result = action.module[action.actionName](action.options);
-        if (!_.isNull(result)) {
-          _ref = _.keys(result);
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            key = _ref[_i];
-            if (this[key] !== void 0) {
-              this[key].show(result[key]);
-            }
-          }
-          return this.trigger("action:done", action);
+        if (!(action === void 0 || action.module === void 0)) {
+          return action.module.trigger("action:execute", action);
         }
       };
 
-      actionDone = function(action) {
-        if (!_.isNull(this.router) && action.isRoutable) {
-          return this.router.navigate(action.route());
+      actionExecuted = function(action) {
+        var key, _i, _len, _ref;
+        if (!_.isNull(action.updatedRegions)) {
+          _ref = _.keys(action.updatedRegions);
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            key = _ref[_i];
+            if (this[key] !== void 0) {
+              this[key].show(action.updatedRegions[key].view);
+            }
+          }
+          if (!_.isNull(this.router) && action.isRoutable) {
+            return this.router.navigate(action.route());
+          }
         }
       };
 
@@ -335,8 +353,11 @@ then the route to reach should not be available anymore. This is the reason why 
             this.router.route(path, "" + module.name + ":" + actionName);
           }
         }
-        return this.listenTo(module, "action:module", function(moduleAction) {
+        this.listenTo(module, "action:module", function(moduleAction) {
           return action.call(_this, moduleAction);
+        });
+        return this.listenTo(module, "action:executed", function(moduleAction) {
+          return actionExecuted.call(_this, moduleAction);
         });
       };
 
@@ -382,17 +403,30 @@ then the route to reach should not be available anymore. This is the reason why 
 
     })(Marionette.View);
     Admin.Module = Marionette.Controller.extend({
-      initialize: function(options) {
+      constructor: function() {
+        var args;
         if (this.name === void 0) {
           throw new Error("The name of the module must be defined");
         }
         if (this.routeActions === void 0) {
           throw new Error("At least one route action must be defined");
         }
+        args = Array.prototype.slice.apply(arguments);
+        Marionette.Controller.prototype.constructor.apply(this, args);
         if (this.basePath === void 0) {
           this.basePath = "" + (this.name.replace(/:/g, "/"));
         }
-        return this.basePath = _.str.endsWith(this.basePath, "/") ? this.basePath : "" + this.basePath + "/";
+        this.basePath = _.str.endsWith(this.basePath, "/") ? this.basePath : "" + this.basePath + "/";
+        this.on("action:route", function(actionName, pathParameters, options) {
+          return this.trigger("action:module", ActionFactory.routeAction(this, actionName, pathParameters), options);
+        });
+        this.on("action:noroute", function(actionName, options) {
+          return this.trigger("action:module", ActionFactory.action(this, actionName, options));
+        });
+        return this.on("action:execute", function(action) {
+          this.triggerMethod(action.name, action);
+          return this.trigger("action:executed", action);
+        });
       },
       routes: function() {
         var fReduce,
@@ -411,26 +445,125 @@ then the route to reach should not be available anymore. This is the reason why 
         } else {
           return "" + this.basePath + (_.str.ltrim(route, '/'));
         }
-      },
-      routableAction: function(actionName, pathParameters, options) {
-        return this.trigger("action:module", ActionFactory.routeAction(this, actionName, pathParameters), options);
-      },
-      action: function(actionName, options) {
-        return this.trigger("action:module", ActionFactory.action(this, actionName, options));
       }
     });
     Admin.CrudModule = Admin.Module.extend({
-      initialize: function(options) {
-        this["super"](options);
+      constructor: function() {
+        var args;
+        args = Array.prototype.slice.apply(arguments);
+        Admin.Module.prototype.constructor.apply(this, args);
         if (this.collection === void 0) {
           throw new Error("The collection must be specified");
         }
-        if (this.model === void 0 && !(this.collection.prototype.model === void 0)) {
-          this.model = this.collection.prototype.model;
+        if (_.isFunction(this.collection)) {
+          if (this.model === void 0 && !(this.collection.prototype.model === void 0)) {
+            this.model = this.collection.prototype.model;
+          }
+        } else {
+          this.model = this.collection.model;
         }
         if (this.model === void 0) {
           throw new Error("The model must be specified");
         }
+        if (this.views === void 0) {
+          throw new Error("Views must be defined");
+        }
+      },
+      onMain: function(action) {
+        var view,
+          _this = this;
+        view = new this.views.main.view;
+        view.on("new", function() {
+          return _this.trigger("action:route", "create");
+        });
+        view.on("edit", function(model) {
+          return _this.trigger("action:route", "edit", {
+            id: model.get("id")
+          }, {
+            model: model
+          });
+        });
+        view.on("delete", function(model) {
+          return _this.trigger("action:noroute", "delete", {
+            model: model
+          });
+        });
+        return action.updatedRegions[this.views.main.region] = _.view(view);
+      },
+      onCreate: function(action) {
+        var view,
+          _this = this;
+        view = new this.views.create.view();
+        view.on("create", function(modelAttributes) {
+          _this.collection.create(modelAttributes);
+          return _this.trigger("action:route", "main");
+        });
+        view.on("cancel", function() {
+          return this.trigger("action:back");
+        });
+        return action.updatedRegions[this.views.create.region] = _.view(view);
+      },
+      onEdit: function(action) {
+        var view,
+          _this = this;
+        view = new this.views.edit.view({
+          model: _.model(this.collection, action)
+        });
+        view.on("edit", function(modelAttributes) {
+          view.model.set(modelAttributes);
+          return _this.trigger("action:route", "main");
+        });
+        return action.updatedRegions[this.views.edit.region] = _.view(view);
+      },
+      onDelete: function(action) {
+        var view,
+          _this = this;
+        view = new this.views["delete"].view({
+          model: _.model(this.collection, action)
+        });
+        view.on("delete", function(model) {
+          _this.collection.remove(model);
+          return _this.trigger("action:noroute", "main");
+        });
+        return view.render();
+      }
+    });
+    Admin.FormView = Backbone.Marionette.ItemView.extend({
+      events: {
+        "click .cancel": "cancel",
+        "click .create": "create",
+        "click .edit": "edit"
+      },
+      modelAttributes: function() {
+        throw new Error("Missing method getAttributes().");
+      },
+      create: function(event) {
+        event.preventDefault();
+        return this.trigger("create", this.modelAttributes());
+      },
+      edit: function(event) {
+        event.preventDefault();
+        return this.trigger("edit", this.modelAttributes());
+      },
+      cancel: function(event) {
+        event.preventDefault();
+        return this.trigger("cancel");
+      }
+    });
+    Admin.DeleteView = Backbone.View.extend({
+      triggerMethod: Marionette.triggerMethod,
+      events: {
+        "click .no": "no",
+        "click .yes": "yes"
+      },
+      no: function(event) {
+        event.preventDefault();
+        return this.triggerMethod("no", event);
+      },
+      yes: function(event) {
+        event.preventDefault();
+        this.triggerMethod("yes", event);
+        return this.trigger("delete", this.model);
       }
     });
     Admin.MainRegion = (function(_super) {

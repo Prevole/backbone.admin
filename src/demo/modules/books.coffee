@@ -1,4 +1,5 @@
 #= ../data/books-data.coffee
+
 ###
 ## BookModel
 
@@ -8,14 +9,6 @@ BookModel = class extends DataModel
   fields: ["era", "serie", "title", "timeline", "author", "release", "type"]
 
 ###
-The books transformed into models
-###
-bookModels = _.reduce(booksData, (models, modelData) ->
-  models.push new BookModel(modelData)
-  models
-, [])
-
-###
 ## BookCollection
 
 The collection of books
@@ -23,25 +16,23 @@ The collection of books
 BookCollection = class extends ModelCollection
   model: BookModel
 
-  getModels: ->
-    bookModels
-
 ###
 The collection used in the views
 ###
-books = new BookCollection(booksData)
+bookCollection = new BookCollection(_.collectionize(BookModel, booksData))
 
 ###
 Template used to render the grid headers for the books
 ###
 bookHeaderTemplate = (data) ->
-  "<th class='sorting'>Era</th>" +
-  "<th class='sorting'>Serie</th>" +
-  "<th class='sorting'>Title</th>" +
-  "<th class='sorting'>Timeline</th>" +
-  "<th class='sorting'>Author</th>" +
-  "<th class='sorting'>Release</th>" +
-  "<th class='sorting'>Type</th>"
+  '<th class="sorting">Era</th>' +
+  '<th class="sorting">Serie</th>' +
+  '<th class="sorting">Title</th>' +
+  '<th class="sorting">Timeline</th>' +
+  '<th class="sorting">Author</th>' +
+  '<th class="sorting">Release</th>' +
+  '<th class="sorting">Type</th>' +
+  '<th>Action</th>'
 
 ###
 Template used to render the grid rows for the books
@@ -53,7 +44,9 @@ bookRowTemplate = (data) ->
   "<td>#{data.timeline}</td>" +
   "<td>#{data.author}</td>" +
   "<td>#{data.release}</td>" +
-  "<td>#{data.type}</td>"
+  "<td>#{data.type}</td>" +
+  '<td><button class="edit btn btn-small">Update</button>&nbsp;' +
+  '<button class="delete btn btn-small">Delete</button></td>'
 
 ###
 ## BookHeaderView
@@ -77,7 +70,7 @@ BookRowView = class extends Dg.RowView
 This grid layout render the grid for the books
 ###
 BookGridLayout = Dg.createGridLayout(
-  collection: books
+  collection: bookCollection
   gridRegions:
     table:
       view: Dg.TableView.extend
@@ -86,51 +79,65 @@ BookGridLayout = Dg.createGridLayout(
 )
 
 ###
+## FormBookView
+
+Base view to build create/edit form views
+###
+FormBookView = Admin.FormView.extend
+  ui:
+    title: "#title"
+
+###
+## CreateBookView
+
+The view to create a new book
+###
+CreateBookView = FormBookView.extend
+  template: "#createBook"
+
+  modelAttributes: ->
+    {id: _.random(0, 1000), title: @ui.title.val()}
+
+###
+## EditBookView
+
+The view to edit an existing book
+###
+EditBookView = FormBookView.extend
+  template: "#editBook"
+
+  modelAttributes: ->
+    {title: @ui.title.val()}
+
+  onRender: ->
+    @ui.title.val(@model.get("title"))
+
+###
 ## BooksModule
 
 The book module that manages the different actions related to the books
 ###
-BooksModule = class extends Admin.Module
+BooksModule = class extends Admin.CrudModule
   name: "books"
+  collection: bookCollection
+
+  views:
+    main:
+      view: BookGridLayout
+      region: "mainRegion"
+    create:
+      view: CreateBookView
+      region: "mainRegion"
+    edit:
+      view: EditBookView
+      region: "mainRegion"
+    delete:
+      view: DeleteView
 
   routeActions:
     main:   ""
-    add:    "add"
-
-  main: ->
-    {
-      r1: new BookGridLayout()
-      r2: new BookGridLayout()
-    }
-#    Test = Backbone.View.extend
-#      events:
-#        "click [data-action]": "action"
-#
-#      action: (event) =>
-#        event.preventDefault()
-#
-#        @action $(event.target).attr("data-action")
-#
-#      render: ->
-#        $(@el).html("Books: #{Date.now()} | <a href=\"books/add\" data-action=\"books:add\">Add book</a>")
-#
-#    r1: new Test()
-
-  add: ->
-    F1 = Backbone.View.extend
-#      el: ".content"
-
-      render: ->
-        $(@el).text("From books: Fruits: #{Date.now()}")
-
-    F2 = Backbone.View.extend
-      render: ->
-        $(@el).text("From books: Vegetables: #{Date.now()}")
-
-    {
-      r1: new F1()
-      r2: new F2()
-    }
+    create: "new"
+    edit:   "edit/:id"
 
 appController.addInitializer ->
   @registerModule(new BooksModule())

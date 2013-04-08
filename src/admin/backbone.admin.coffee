@@ -42,14 +42,16 @@ window.Backbone.Admin = window.Admin = ( (Backbone, Marionette, _, $) ->
   authorizator = null
 
   # backbone.admin.authorizator.coffee
-  # backbone.admin.formview.coffee
 
+  #= backbone.admin.mixin.coffee
   #= backbone.admin.action.coffee
   #= backbone.admin.actionfactory.coffee
   #= backbone.admin.appcontroller.coffee
   #= backbone.admin.navigationview.coffee
   #= backbone.admin.module.coffee
   #= backbone.admin.crudmodule.coffee
+  #= backbone.admin.formview.coffee
+  #= backbone.admin.deleteview.coffee
 
   #= backbone.admin.mainregion.coffee
 

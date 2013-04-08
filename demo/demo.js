@@ -1,9 +1,22 @@
 (function() {
-  var AddFruitView, BookCollection, BookGridLayout, BookHeaderView, BookModel, BookRowView, BooksModule, DataModel, FruitCollection, FruitGridLayout, FruitHeaderView, FruitModel, FruitRowView, FruitsModule, ModelCollection, NavigationView, Region1, Region2, appController, bookHeaderTemplate, bookModels, bookRowTemplate, books, booksData, fruitHeaderTemplate, fruitModels, fruitRowTemplate, fruits, fruitsData,
+  var BookCollection, BookGridLayout, BookHeaderView, BookModel, BookRowView, BooksModule, CreateBookView, CreateFruitView, DataModel, DeleteView, EditBookView, EditFruitView, FormBookView, FormFruitView, FruitCollection, FruitGridLayout, FruitHeaderView, FruitModel, FruitRowView, FruitsModule, ModelCollection, NavigationView, Region, appController, bookCollection, bookHeaderTemplate, bookRowTemplate, booksData, fruitCollection, fruitHeaderTemplate, fruitRowTemplate, fruitsData,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   appController = new Admin.ApplicationController();
+
+  _.mixin({
+    collectionize: function(model, rawModels) {
+      var id;
+      id = 0;
+      return _.reduce(rawModels, function(models, modelData) {
+        models.push(new model(_.extend(modelData, {
+          id: id++
+        })));
+        return models;
+      }, []);
+    }
+  });
 
   /*
   ## DataModel
@@ -72,23 +85,35 @@
       } else {
         customs = options.meta;
       }
-      return this.meta = _.defaults(customs, {
+      this.meta = _.defaults(customs, {
         page: 1,
         perPage: 5,
         term: "",
         sort: {}
       });
+      return this.originalModels = _.clone(models);
+    };
+
+    _Class.prototype.create = function(attributes, options) {
+      return this.originalModels.push(new this.model(attributes));
+    };
+
+    _Class.prototype.remove = function(model, options) {
+      this.originalModels = _.reject(this.originalModels, function(currentModel) {
+        return currentModel.id === model.id;
+      });
+      return _Class.__super__.remove.call(this, model, options);
     };
 
     _Class.prototype.sync = function(method, model, options) {
       var localData, storedSuccess,
         _this = this;
       storedSuccess = options.success;
-      options.success = function(response) {
-        storedSuccess(response);
+      options.success = function(models) {
+        storedSuccess(models);
         return _this.trigger("fetched");
       };
-      localData = _.clone(this.getModels());
+      localData = _.clone(this.originalModels);
       localData = _.filter(localData, function(model) {
         return model.match(_this.meta.term.toLowerCase());
       });
@@ -135,6 +160,31 @@
     return _Class;
 
   })(Backbone.Collection);
+
+  /*
+  ## DeleteView
+  
+  The view to delete a record
+  */
+
+
+  DeleteView = Admin.DeleteView.extend({
+    tagName: "div",
+    onNo: function(event) {
+      return this.$el.modal("hide");
+    },
+    onYes: function(event) {
+      return this.$el.modal("hide");
+    },
+    render: function() {
+      this.$el = $("#deleteModal");
+      this.delegateEvents();
+      this.$el.modal({
+        show: true
+      });
+      return this;
+    }
+  });
 
   booksData = [
     {
@@ -266,16 +316,6 @@
   })(DataModel);
 
   /*
-  The books transformed into models
-  */
-
-
-  bookModels = _.reduce(booksData, function(models, modelData) {
-    models.push(new BookModel(modelData));
-    return models;
-  }, []);
-
-  /*
   ## BookCollection
   
   The collection of books
@@ -292,10 +332,6 @@
 
     _Class.prototype.model = BookModel;
 
-    _Class.prototype.getModels = function() {
-      return bookModels;
-    };
-
     return _Class;
 
   })(ModelCollection);
@@ -305,7 +341,7 @@
   */
 
 
-  books = new BookCollection(booksData);
+  bookCollection = new BookCollection(_.collectionize(BookModel, booksData));
 
   /*
   Template used to render the grid headers for the books
@@ -313,7 +349,7 @@
 
 
   bookHeaderTemplate = function(data) {
-    return "<th class='sorting'>Era</th>" + "<th class='sorting'>Serie</th>" + "<th class='sorting'>Title</th>" + "<th class='sorting'>Timeline</th>" + "<th class='sorting'>Author</th>" + "<th class='sorting'>Release</th>" + "<th class='sorting'>Type</th>";
+    return '<th class="sorting">Era</th>' + '<th class="sorting">Serie</th>' + '<th class="sorting">Title</th>' + '<th class="sorting">Timeline</th>' + '<th class="sorting">Author</th>' + '<th class="sorting">Release</th>' + '<th class="sorting">Type</th>' + '<th>Action</th>';
   };
 
   /*
@@ -322,7 +358,7 @@
 
 
   bookRowTemplate = function(data) {
-    return ("<td>" + data.era + "</td>") + ("<td>" + data.serie + "</td>") + ("<td>" + data.title + "</td>") + ("<td>" + data.timeline + "</td>") + ("<td>" + data.author + "</td>") + ("<td>" + data.release + "</td>") + ("<td>" + data.type + "</td>");
+    return ("<td>" + data.era + "</td>") + ("<td>" + data.serie + "</td>") + ("<td>" + data.title + "</td>") + ("<td>" + data.timeline + "</td>") + ("<td>" + data.author + "</td>") + ("<td>" + data.release + "</td>") + ("<td>" + data.type + "</td>") + '<td><button class="edit btn btn-small">Update</button>&nbsp;' + '<button class="delete btn btn-small">Delete</button></td>';
   };
 
   /*
@@ -375,7 +411,7 @@
 
 
   BookGridLayout = Dg.createGridLayout({
-    collection: books,
+    collection: bookCollection,
     gridRegions: {
       table: {
         view: Dg.TableView.extend({
@@ -383,6 +419,55 @@
           headerView: BookHeaderView
         })
       }
+    }
+  });
+
+  /*
+  ## FormBookView
+  
+  Base view to build create/edit form views
+  */
+
+
+  FormBookView = Admin.FormView.extend({
+    ui: {
+      title: "#title"
+    }
+  });
+
+  /*
+  ## CreateBookView
+  
+  The view to create a new book
+  */
+
+
+  CreateBookView = FormBookView.extend({
+    template: "#createBook",
+    modelAttributes: function() {
+      return {
+        id: _.random(0, 1000),
+        title: this.ui.title.val()
+      };
+    }
+  });
+
+  /*
+  ## EditBookView
+  
+  The view to edit an existing book
+  */
+
+
+  EditBookView = FormBookView.extend({
+    template: "#editBook",
+    modelAttributes: function() {
+      return {
+        title: this.ui.title.val()
+      };
+    },
+    onRender: function() {
+      return this.ui.title.val(this.model.get("title"));
     }
   });
 
@@ -403,39 +488,35 @@
 
     _Class.prototype.name = "books";
 
+    _Class.prototype.collection = bookCollection;
+
+    _Class.prototype.views = {
+      main: {
+        view: BookGridLayout,
+        region: "mainRegion"
+      },
+      create: {
+        view: CreateBookView,
+        region: "mainRegion"
+      },
+      edit: {
+        view: EditBookView,
+        region: "mainRegion"
+      },
+      "delete": {
+        view: DeleteView
+      }
+    };
+
     _Class.prototype.routeActions = {
       main: "",
-      add: "add"
-    };
-
-    _Class.prototype.main = function() {
-      return {
-        r1: new BookGridLayout(),
-        r2: new BookGridLayout()
-      };
-    };
-
-    _Class.prototype.add = function() {
-      var F1, F2;
-      F1 = Backbone.View.extend({
-        render: function() {
-          return $(this.el).text("From books: Fruits: " + (Date.now()));
-        }
-      });
-      F2 = Backbone.View.extend({
-        render: function() {
-          return $(this.el).text("From books: Vegetables: " + (Date.now()));
-        }
-      });
-      return {
-        r1: new F1(),
-        r2: new F2()
-      };
+      create: "new",
+      edit: "edit/:id"
     };
 
     return _Class;
 
-  })(Admin.Module);
+  })(Admin.CrudModule);
 
   appController.addInitializer(function() {
     return this.registerModule(new BooksModule());
@@ -443,61 +524,42 @@
 
   fruitsData = [
     {
-      id: 1,
       name: "Banana"
     }, {
-      id: 2,
       name: "Apple"
     }, {
-      id: 3,
       name: "Peach"
     }, {
-      id: 4,
       name: "Grape"
     }, {
-      id: 5,
       name: "Grapefruits"
     }, {
-      id: 6,
       name: "Lemon"
     }, {
-      id: 7,
       name: "Orange"
     }, {
-      id: 8,
       name: "Tomato"
     }, {
-      id: 9,
       name: "Apricot"
     }, {
-      id: 10,
       name: "Avocado"
     }, {
-      id: 11,
       name: "Cherry"
     }, {
-      id: 12,
       name: "Clementine"
     }, {
-      id: 13,
       name: "Coconut"
     }, {
-      id: 14,
       name: "Kumquat"
     }, {
-      id: 15,
       name: "Lychee"
     }, {
-      id: 16,
       name: "Melon"
     }, {
-      id: 17,
       name: "Pear"
     }, {
-      id: 18,
       name: "Pineapple"
     }, {
-      id: 19,
       name: "Watermelon"
     }
   ];
@@ -524,16 +586,6 @@
   })(DataModel);
 
   /*
-  The fruits data transformed to models
-  */
-
-
-  fruitModels = _.reduce(fruitsData, function(models, modelData) {
-    models.push(new FruitModel(modelData));
-    return models;
-  }, []);
-
-  /*
   ## FruitCollection
   
   The fruit collection
@@ -550,10 +602,6 @@
 
     _Class.prototype.model = FruitModel;
 
-    _Class.prototype.getModels = function() {
-      return fruitModels;
-    };
-
     return _Class;
 
   })(ModelCollection);
@@ -563,7 +611,7 @@
   */
 
 
-  fruits = new FruitCollection(fruitsData);
+  fruitCollection = new FruitCollection(_.collectionize(FruitModel, fruitsData));
 
   /*
   Template used to render the grid headers for the fruits
@@ -571,7 +619,7 @@
 
 
   fruitHeaderTemplate = function(data) {
-    return "<th class='sorting'>Name</th>" + "<th>Action</th>";
+    return '<th class="sorting">Name</th>' + '<th>Action</th>';
   };
 
   /*
@@ -580,7 +628,7 @@
 
 
   fruitRowTemplate = function(data) {
-    return ("<td>" + data.name + "</td>") + "<td><button class=\"edit btn btn-small\">Update</button>&nbsp;" + "<button class=\"delete btn btn-small\">Delete</button></td>";
+    return ("<td>" + data.name + "</td>") + '<td><button class="edit btn btn-small">Update</button>&nbsp;' + '<button class="delete btn btn-small">Delete</button></td>';
   };
 
   /*
@@ -633,7 +681,7 @@
 
 
   FruitGridLayout = Dg.createGridLayout({
-    collection: fruits,
+    collection: fruitCollection,
     gridRegions: {
       table: {
         view: Dg.TableView.extend({
@@ -644,21 +692,52 @@
     }
   });
 
-  AddFruitView = Marionette.ItemView.extend({
-    template: "#fruitForm",
-    events: {
-      "click button": "addFruit"
-    },
+  /*
+  ## FormFruitView
+  
+  Base view to build create/edit form views
+  */
+
+
+  FormFruitView = Admin.FormView.extend({
     ui: {
-      fruitName: "#fruitName"
-    },
-    addFruit: function(event) {
-      event.preventDefault();
-      fruitModels.push(new FruitModel({
+      name: "#name"
+    }
+  });
+
+  /*
+  ## CreateFruitView
+  
+  The view to create a new fruit
+  */
+
+
+  CreateFruitView = FormFruitView.extend({
+    template: "#createFruit",
+    modelAttributes: function() {
+      return {
         id: _.random(0, 1000),
-        name: this.ui.fruitName.val()
-      }));
-      return this.trigger("add:done");
+        name: this.ui.name.val()
+      };
+    }
+  });
+
+  /*
+  ## EditFruitView
+  
+  The view to edit an existing fruit
+  */
+
+
+  EditFruitView = FormFruitView.extend({
+    template: "#editFruit",
+    modelAttributes: function() {
+      return {
+        name: this.ui.name.val()
+      };
+    },
+    onRender: function() {
+      return this.ui.name.val(this.model.get("name"));
     }
   });
 
@@ -679,126 +758,35 @@
 
     _Class.prototype.name = "fruits";
 
+    _Class.prototype.collection = fruitCollection;
+
+    _Class.prototype.views = {
+      main: {
+        view: FruitGridLayout,
+        region: "mainRegion"
+      },
+      create: {
+        view: CreateFruitView,
+        region: "mainRegion"
+      },
+      edit: {
+        view: EditFruitView,
+        region: "mainRegion"
+      },
+      "delete": {
+        view: DeleteView
+      }
+    };
+
     _Class.prototype.routeActions = {
       main: "",
-      add: "add",
+      create: "new",
       edit: "edit/:id"
-    };
-
-    _Class.prototype.initialize = function(options) {
-      return _Class.__super__.initialize.call(this, options);
-    };
-
-    _Class.prototype.add = function() {
-      var addFruitView,
-        _this = this;
-      addFruitView = new AddFruitView();
-      addFruitView.on("add:done", function() {
-        return _this.routableAction("main");
-      });
-      return {
-        r1: addFruitView
-      };
-    };
-
-    _Class.prototype.edit = function(options) {
-      var EditFruitView, model, self;
-      self = this;
-      if (options.model === void 0) {
-        model = fruits.get(options.id);
-      } else {
-        model = options.model;
-      }
-      EditFruitView = Marionette.ItemView.extend({
-        template: "#editFruitForm",
-        model: model,
-        events: {
-          "click button": "editFruit"
-        },
-        ui: {
-          fruitName: "#fruitName"
-        },
-        editFruit: function(event) {
-          event.preventDefault();
-          this.model.set("name", this.ui.fruitName.val());
-          return self.routableAction("main");
-        },
-        onRender: function() {
-          return this.ui.fruitName.val(this.model.get("name"));
-        }
-      });
-      return {
-        r1: new EditFruitView()
-      };
-    };
-
-    _Class.prototype["delete"] = function(options) {
-      fruitModels = _.reject(fruitModels, function(fruit) {
-        return fruit.get("id") === options.model.get("id");
-      });
-      fruits.refresh();
-      return null;
-    };
-
-    _Class.prototype.main = function() {
-      var fruitLayout,
-        _this = this;
-      fruitLayout = new FruitGridLayout();
-      this.listenTo(fruitLayout, "new", function() {
-        return _this.routableAction("add");
-      });
-      this.listenTo(fruitLayout, "edit", function(model) {
-        return _this.routableAction("edit", {
-          id: model.get("id")
-        }, {
-          model: model
-        });
-      });
-      this.listenTo(fruitLayout, "delete", function(model) {
-        var self;
-        self = _this;
-        if (_this.deleteView === void 0) {
-          _this.deleteView = new (Backbone.View.extend({
-            tagName: "div",
-            events: {
-              "click .no": "no",
-              "click .yes": "yes"
-            },
-            no: function(event) {
-              event.preventDefault();
-              return this.$el.modal("hide");
-            },
-            yes: function(event) {
-              event.preventDefault();
-              this.$el.modal("hide");
-              return self.action("delete", {
-                model: this.model
-              });
-            },
-            setModel: function(model) {
-              this.model = model;
-              return this;
-            },
-            render: function() {
-              this.$el = $("#deleteModal");
-              this.delegateEvents();
-              this.$el.modal({
-                show: true
-              });
-              return this;
-            }
-          }))();
-        }
-        return _this.deleteView.setModel(model).render();
-      });
-      return {
-        r1: fruitLayout
-      };
     };
 
     return _Class;
 
-  })(Admin.Module);
+  })(Admin.CrudModule);
 
   appController.addInitializer(function() {
     return this.registerModule(new FruitsModule());
@@ -820,7 +808,7 @@
 
   })(Admin.NavigationView);
 
-  Region1 = (function(_super) {
+  Region = (function(_super) {
 
     __extends(_Class, _super);
 
@@ -828,21 +816,7 @@
       return _Class.__super__.constructor.apply(this, arguments);
     }
 
-    _Class.prototype.el = ".content1";
-
-    return _Class;
-
-  })(Marionette.Region);
-
-  Region2 = (function(_super) {
-
-    __extends(_Class, _super);
-
-    function _Class() {
-      return _Class.__super__.constructor.apply(this, arguments);
-    }
-
-    _Class.prototype.el = ".content2";
+    _Class.prototype.el = ".content";
 
     return _Class;
 
@@ -850,8 +824,7 @@
 
   $(document).ready(function() {
     new NavigationView();
-    appController.registerRegion("r1", new Region1());
-    appController.registerRegion("r2", new Region2());
+    appController.registerRegion("mainRegion", new Region());
     return appController.start();
   });
 

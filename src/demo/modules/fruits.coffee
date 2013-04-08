@@ -9,14 +9,6 @@ FruitModel = class extends DataModel
   fields: ["id", "name"]
 
 ###
-The fruits data transformed to models
-###
-fruitModels = _.reduce(fruitsData, (models, modelData) ->
-  models.push new FruitModel(modelData)
-  models
-, [])
-
-###
 ## FruitCollection
 
 The fruit collection
@@ -24,28 +16,25 @@ The fruit collection
 FruitCollection = class extends ModelCollection
   model: FruitModel
 
-  getModels: ->
-    fruitModels
-
 ###
 The collection used in the views
 ###
-fruits = new FruitCollection(fruitsData)
+fruitCollection = new FruitCollection(_.collectionize(FruitModel, fruitsData))
 
 ###
 Template used to render the grid headers for the fruits
 ###
 fruitHeaderTemplate = (data) ->
-  "<th class='sorting'>Name</th>" +
-  "<th>Action</th>"
+  '<th class="sorting">Name</th>' +
+  '<th>Action</th>'
 
 ###
 Template used to render the grid rows for the fruits
 ###
 fruitRowTemplate = (data) ->
   "<td>#{data.name}</td>" +
-  "<td><button class=\"edit btn btn-small\">Update</button>&nbsp;" +
-  "<button class=\"delete btn btn-small\">Delete</button></td>"
+  '<td><button class="edit btn btn-small">Update</button>&nbsp;' +
+  '<button class="delete btn btn-small">Delete</button></td>'
 
 ###
 ## FruitHeaderView
@@ -69,7 +58,7 @@ FruitRowView = class extends Dg.RowView
 This grid layout render the grid for the fruits
 ###
 FruitGridLayout = Dg.createGridLayout(
-  collection: fruits
+  collection: fruitCollection
   gridRegions:
     table:
       view: Dg.TableView.extend
@@ -77,134 +66,66 @@ FruitGridLayout = Dg.createGridLayout(
         headerView: FruitHeaderView
 )
 
+###
+## FormFruitView
 
-AddFruitView = Marionette.ItemView.extend
-  template: "#fruitForm"
-
-  events:
-    "click button": "addFruit"
-
+Base view to build create/edit form views
+###
+FormFruitView = Admin.FormView.extend
   ui:
-    fruitName: "#fruitName"
+    name: "#name"
 
-  addFruit: (event) ->
-    event.preventDefault()
+###
+## CreateFruitView
 
-    fruitModels.push new FruitModel({id: _.random(0, 1000), name: @ui.fruitName.val()})
+The view to create a new fruit
+###
+CreateFruitView = FormFruitView.extend
+  template: "#createFruit"
 
-    @trigger "add:done"
-#    self.routableAction("main")
+  modelAttributes: ->
+    {id: _.random(0, 1000), name: @ui.name.val()}
 
+###
+## EditFruitView
+
+The view to edit an existing fruit
+###
+EditFruitView = FormFruitView.extend
+  template: "#editFruit"
+
+  modelAttributes: ->
+    {name: @ui.name.val()}
+
+  onRender: ->
+    @ui.name.val(@model.get("name"))
 
 ###
 ## FruitsModule
 
 The book module that manages the different actions related to the fruits
 ###
-FruitsModule = class extends Admin.Module
+FruitsModule = class extends Admin.CrudModule
   name: "fruits"
+  collection: fruitCollection
+
+  views:
+    main:
+      view: FruitGridLayout
+      region: "mainRegion"
+    create:
+      view: CreateFruitView
+      region: "mainRegion"
+    edit:
+      view: EditFruitView
+      region: "mainRegion"
+    delete:
+      view: DeleteView
 
   routeActions:
     main:   ""
-    add:    "add"
+    create: "new"
     edit:   "edit/:id"
-
-  initialize: (options) ->
-    super(options)
-
-  add: ->
-    addFruitView = new AddFruitView()
-
-    addFruitView.on "add:done", =>
-      @.routableAction("main")
-
-    r1: addFruitView
-
-  edit: (options) ->
-    self = @
-
-    if options.model is undefined
-      model = fruits.get options.id
-    else
-      model = options.model
-
-    EditFruitView = Marionette.ItemView.extend
-      template: "#editFruitForm"
-      model: model
-
-      events:
-        "click button": "editFruit"
-
-      ui:
-        fruitName: "#fruitName"
-
-      editFruit: (event) ->
-        event.preventDefault()
-
-        @model.set("name", @ui.fruitName.val())
-#        fruitModels.push new FruitModel({name: @ui.fruitName.val()})
-
-        self.routableAction("main")
-
-      onRender: ->
-        @ui.fruitName.val(@model.get("name"))
-
-    r1: new EditFruitView()
-
-  delete: (options) ->
-    fruitModels = _.reject fruitModels, (fruit) ->
-      fruit.get("id") == options.model.get("id")
-
-    fruits.refresh()
-    return null
-#    @action "main"
-
-  main: ->
-    fruitLayout = new FruitGridLayout()
-
-    @listenTo fruitLayout, "new", =>
-      @routableAction "add"
-
-    @listenTo fruitLayout, "edit", (model) =>
-      @routableAction "edit", {id: model.get("id")}, {model: model}
-
-    @listenTo fruitLayout, "delete", (model) =>
-      self = @
-
-      if @deleteView is undefined
-        @deleteView = new (Backbone.View.extend
-          tagName: "div"
-
-          events:
-            "click .no": "no"
-            "click .yes": "yes"
-
-          no: (event) ->
-            event.preventDefault()
-            @$el.modal("hide")
-
-          yes: (event) ->
-            event.preventDefault()
-            @$el.modal("hide")
-            self.action "delete", {model: @model}
-
-          setModel: (model) ->
-            @model = model
-            @
-
-          render: ->
-            @$el = $("#deleteModal")
-            @delegateEvents()
-            @$el.modal(show: true)
-            @
-        )()
-
-      @deleteView.setModel(model).render()
-
-#      $("#deleteModal").modal(show: true)
-#      @action "delete", {model: model}
-
-    r1: fruitLayout
 
 appController.addInitializer ->
   @registerModule(new FruitsModule())

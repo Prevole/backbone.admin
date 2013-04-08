@@ -58,8 +58,8 @@ Admin.ApplicationController = class
     @on "action:outside:noroute", (actionName, parameters) =>
       actionFromOutside.call @, actionName, false, parameters
 
-    @on "action:done", (action) =>
-      actionDone.call @, action
+#    @on "action:done", (action) =>
+#      actionDone.call @, action
 
     # Action triggered from the router when a certain route is browsed
     unless _.isNull(@router)
@@ -171,22 +171,26 @@ Admin.ApplicationController = class
 
 
   action = (action) ->
-    result = action.module[action.actionName](action.options)
+    unless action is undefined or action.module is undefined
+      action.module.trigger "action:execute", action
 
-    unless _.isNull(result)
+
+  actionExecuted = (action) ->
+    unless _.isNull(action.updatedRegions)
   #    for name in @regionNames
   #      @[name].close()
 
-      for key in _.keys(result)
+      for key in _.keys(action.updatedRegions)
         unless @[key] is undefined
-          @[key].show result[key]
+          @[key].show action.updatedRegions[key].view
 
-      @trigger "action:done", action
+      @router.navigate action.route() if not _.isNull(@router) and action.isRoutable
+#      @trigger "action:done", action
 
 
 
-  actionDone = (action) ->
-    @router.navigate action.route() if not _.isNull(@router) and action.isRoutable
+#  actionDone = (action) ->
+#    @router.navigate action.route() if not _.isNull(@router) and action.isRoutable
 
   ###
   Allow to register a module. When this function is called, the action that can be routed
@@ -210,6 +214,9 @@ Admin.ApplicationController = class
     # Listen the event action on each module registered
     @listenTo module, "action:module", (moduleAction) =>
       action.call @, moduleAction
+
+    @listenTo module, "action:executed", (moduleAction) =>
+      actionExecuted.call @, moduleAction
 
   registerRegion: (name, region) ->
     throw new Error "The region #{name} is already registered" unless @[name] is undefined

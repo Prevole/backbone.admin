@@ -34,11 +34,7 @@
         = " | "
         %a{href: "fruits", data-action: "fruits"}= "Fruits"
 
-      -#.content
-      %table{style: "width:100%"}
-        %tr
-          %td.content1
-          %td.content2
+      .content
 
     .modal.hide.fade{tabindex: 1, id: "deleteModal", role: "dialog"}
       .modal-header
@@ -50,31 +46,51 @@
         %button.btn.no= "No"
         %button.btn.btn-primary.yes= "Yes"
 
-    %script{id: "test", type: "text/template"}
-      %section
-        %article{id: "a1"}= "Fruit 1"
-        %article{id: "a2"}= "Fruit 2"
+    -#%script{id: "test", type: "text/template"}
+    -#  %section
+    -#    %article{id: "a1"}= "Fruit 1"
+    -#    %article{id: "a2"}= "Fruit 2"
+    -#
+    -#%script{id: "books", type: "text/template"}
+    -#  %p= "Books are there"
+    -#  %br
+    -#  %a{href: "books/add", data-action: "books:add"}= "Add book"
 
-    %script{id: "books", type: "text/template"}
-      %p= "Books are there"
-      %br
-      %a{href: "books/add", data-action: "books:add"}= "Add book"
-
-    %script{id: "fruitForm", type: "text/template"}
+    %script#createFruit{type: "text/template"}
       %h2= "Add fruit"
       %from
         %p
           %label= "Name"
-          %input{id: "fruitName", type: "text", name: "name"}
-        %button.btn= "Create"
+          %input{id: "name", type: "text", name: "name"}
+        %button.btn.create= "Create"
+        %button.btn.cancel= "Cancel"
 
-    %script{id: "editFruitForm", type: "text/template"}
+    %script#editFruit{type: "text/template"}
       %h2= "Edit fruit"
       %from
         %p
           %label= "Name"
-          %input{id: "fruitName", type: "text", name: "name"}
-        %button.btn= "Edit"
+          %input{id: "name", type: "text", name: "name"}
+        %button.btn.edit= "Edit"
+        %button.btn.cancel= "Cancel"
+
+    %script#createBook{type: "text/template"}
+      %h2= "Add book"
+      %from
+        %p
+          %label= "Title"
+          %input{id: "title", type: "text", name: "title"}
+        %button.btn.create= "Create"
+        %button.btn.cancel= "Cancel"
+
+    %script#editBook{type: "text/template"}
+      %h2= "Edit book"
+      %from
+        %p
+          %label= "title"
+          %input{id: "title", type: "text", name: "title"}
+        %button.btn.edit= "Edit"
+        %button.btn.cancel= "Cancel"
 
       -#%p.lead= "Backbone Datagrid is a plugin to organize present data with some controls like sorting, pagging, filtering. "
       -#  %a{link: "http://backbonejs.org", target: "_blank"}= "Backbone"

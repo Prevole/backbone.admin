@@ -1,3 +1,12 @@
+_.mixin
+  collectionize: (model, rawModels) ->
+    id = 0
+
+    _.reduce(rawModels, (models, modelData) ->
+      models.push new model(_.extend(modelData, {id: id++}))
+      models
+    , [])
+
 ###
 ## DataModel
 
@@ -43,13 +52,23 @@ ModelCollection = class extends Backbone.Collection
         term: ""
         sort: {}
 
+    @originalModels = _.clone models
+
+  create: (attributes, options) ->
+    @originalModels.push new @model(attributes)
+
+  remove: (model, options) ->
+    @originalModels = _.reject @originalModels, (currentModel) ->
+      currentModel.id == model.id
+    super(model, options)
+
   sync: (method, model, options) ->
     storedSuccess = options.success
-    options.success = (response) =>
-      storedSuccess(response)
+    options.success = (models) =>
+      storedSuccess(models)
       @trigger "fetched"
 
-    localData = _.clone @getModels()
+    localData = _.clone @originalModels
 
     localData = _.filter localData, (model) =>
       return model.match(@meta.term.toLowerCase())
@@ -87,3 +106,23 @@ ModelCollection = class extends Backbone.Collection
   updateInfo: (options) ->
     @meta = _.defaults options, @meta
     @fetch()
+
+###
+## DeleteView
+
+The view to delete a record
+###
+DeleteView = Admin.DeleteView.extend
+  tagName: "div"
+
+  onNo: (event) ->
+    @$el.modal("hide")
+
+  onYes: (event) ->
+    @$el.modal("hide")
+
+  render: ->
+    @$el = $("#deleteModal")
+    @delegateEvents()
+    @$el.modal(show: true)
+    @
