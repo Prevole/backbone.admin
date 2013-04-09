@@ -1,7 +1,6 @@
 Action = class
   module: null
   name: "main"
-#  actionDetails: null
   options: {}
   isRoutable: false
   updatedRegions: {}

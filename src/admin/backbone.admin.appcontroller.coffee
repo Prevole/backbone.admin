@@ -58,9 +58,6 @@ Admin.ApplicationController = class
     @on "action:outside:noroute", (actionName, parameters) =>
       actionFromOutside.call @, actionName, false, parameters
 
-#    @on "action:done", (action) =>
-#      actionDone.call @, action
-
     # Action triggered from the router when a certain route is browsed
     unless _.isNull(@router)
       @listenTo @router, "route", (actionName, options) =>
@@ -185,12 +182,9 @@ Admin.ApplicationController = class
           @[key].show action.updatedRegions[key].view
 
       @router.navigate action.route() if not _.isNull(@router) and action.isRoutable
-#      @trigger "action:done", action
 
 
 
-#  actionDone = (action) ->
-#    @router.navigate action.route() if not _.isNull(@router) and action.isRoutable
 
   ###
   Allow to register a module. When this function is called, the action that can be routed
