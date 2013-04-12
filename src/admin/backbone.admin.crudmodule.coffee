@@ -37,9 +37,6 @@ Admin.CrudModule = Admin.Module.extend
       @collection.create modelAttributes
       @trigger "action:route", "main"
 
-    view.on "cancel", ->
-      @trigger "action:back"
-
     action.updatedRegions[@views.create.region] = _.view view
 
   onEdit: (action) ->

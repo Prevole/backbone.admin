@@ -498,9 +498,6 @@ then the route to reach should not be available anymore. This is the reason why 
           _this.collection.create(modelAttributes);
           return _this.trigger("action:route", "main");
         });
-        view.on("cancel", function() {
-          return this.trigger("action:back");
-        });
         return action.updatedRegions[this.views.create.region] = _.view(view);
       },
       onEdit: function(action) {
@@ -530,7 +527,6 @@ then the route to reach should not be available anymore. This is the reason why 
     });
     Admin.FormView = Backbone.Marionette.ItemView.extend({
       events: {
-        "click .cancel": "cancel",
         "click .create": "create",
         "click .edit": "edit"
       },
@@ -544,10 +540,6 @@ then the route to reach should not be available anymore. This is the reason why 
       edit: function(event) {
         event.preventDefault();
         return this.trigger("edit", this.modelAttributes());
-      },
-      cancel: function(event) {
-        event.preventDefault();
-        return this.trigger("cancel");
       }
     });
     Admin.DeleteView = Backbone.View.extend({
