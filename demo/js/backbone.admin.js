@@ -507,7 +507,7 @@ then the route to reach should not be available anymore. This is the reason why 
           model: _.model(this.collection, action)
         });
         view.on("edit", function(modelAttributes) {
-          view.model.set(modelAttributes);
+          view.model.save(modelAttributes);
           return _this.trigger("action:route", "main");
         });
         return action.updatedRegions[this.views.edit.region] = _.view(view);

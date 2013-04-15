@@ -43,7 +43,7 @@ Admin.CrudModule = Admin.Module.extend
     view = new @views.edit.view(model: _.model @collection, action)
 
     view.on "edit", (modelAttributes) =>
-      view.model.set(modelAttributes)
+      view.model.save(modelAttributes)
       @trigger "action:route", "main"
 
     action.updatedRegions[@views.edit.region] = _.view view

@@ -2,7 +2,7 @@
   "name": "Backbone.Admin",
   "description": "CRUD Admin plugin for Backbone (heavy use of Backbone.Marionette)",
   "keywords": [ "admin", "crud", "backbone", "marionette" ],
-  "version": "0.0.2",
+  "version": "0.0.3",
   "homepage": "https://github.com/prevole/backbone.admin",
   "author": "Laurent Prevost (prevole) <prevole@prevole.ch>",
   "repository": {
