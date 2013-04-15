@@ -1,3 +1,6 @@
+Backbone.sync = (method, model, options) ->
+  model
+
 appController = new Admin.ApplicationController()
 
 #= modules/commons.coffee

@@ -69,29 +69,16 @@ then the route to reach should not be available anymore. This is the reason why 
     });
     Action = (function() {
 
-      _Class.prototype.module = null;
-
-      _Class.prototype.name = "main";
-
-      _Class.prototype.options = {};
-
-      _Class.prototype.isRoutable = false;
-
-      _Class.prototype.updatedRegions = {};
-
       function _Class(isRoutable, module, name, options) {
-        this.isRoutable = isRoutable;
-        this.module = module;
-        if (this.module === void 0) {
+        if (module === void 0) {
           throw new Error("The module must be defined");
         }
+        this.module = module || null;
         this.moduleName = this.module.name;
-        if (name !== void 0) {
-          this.name = name;
-        }
-        if (options !== void 0) {
-          this.options = options;
-        }
+        this.name = name || "main";
+        this.options = options || {};
+        this.isRoutable = isRoutable || false;
+        this.updatedRegions = {};
       }
 
       _Class.prototype.route = function() {
