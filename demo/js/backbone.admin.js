@@ -302,6 +302,7 @@ then the route to reach should not be available anymore. This is the reason why 
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             key = _ref[_i];
             if (this[key] !== void 0) {
+              this[key].close();
               this[key].show(action.updatedRegions[key].view);
             }
           }
@@ -505,8 +506,8 @@ then the route to reach should not be available anymore. This is the reason why 
         view = new this.views["delete"].view({
           model: _.model(this.collection, action)
         });
-        view.on("delete", function(model) {
-          _this.collection.remove(model);
+        view.on("delete", function() {
+          view.model.destroy();
           return _this.trigger("action:noroute", "main");
         });
         return view.render();
@@ -535,14 +536,22 @@ then the route to reach should not be available anymore. This is the reason why 
         "click .no": "no",
         "click .yes": "yes"
       },
+      initialize: function(options) {
+        if (options.model === void 0) {
+          throw new Error("No model given for the delete view when it is mandatory");
+        }
+        return this.model = options.model;
+      },
       no: function(event) {
         event.preventDefault();
-        return this.triggerMethod("no", event);
+        this.triggerMethod("no", event);
+        return this.remove();
       },
       yes: function(event) {
         event.preventDefault();
         this.triggerMethod("yes", event);
-        return this.trigger("delete", this.model);
+        this.trigger("delete");
+        return this.remove();
       }
     });
     Admin.MainRegion = (function(_super) {

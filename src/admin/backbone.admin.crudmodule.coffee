@@ -49,10 +49,11 @@ Admin.CrudModule = Admin.Module.extend
     action.updatedRegions[@views.edit.region] = _.view view
 
   onDelete: (action) ->
-    view = new @views.delete.view(model: _.model @collection, action)
+    view = new @views.delete.view(model: _.model(@collection, action))
 
-    view.on "delete", (model) =>
-      @collection.remove model
+    view.on "delete", =>
+      view.model.destroy()
+#      @collection.fetch()
       @trigger "action:noroute", "main"
 
     view.render()
