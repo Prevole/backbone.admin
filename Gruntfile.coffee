@@ -41,6 +41,8 @@ module.exports = (grunt) ->
     # ### Rigger tasks
     rig:
       core:
+        options:
+          banner: '<%= meta.banner %>'
         files:
           'dist/std/backbone.admin.js': ['src/admin/backbone.admin.coffee']
       demo:
