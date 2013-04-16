@@ -173,20 +173,27 @@
 
 
   DeleteView = Admin.DeleteView.extend({
-    tagName: "div",
+    template: function(data) {
+      return '<div id="deleteModal" class="modal hide fade" tabindex="1" role="dialog">' + '<div class="modal-header">' + '<button class="close no" type="button">x</button>' + '<h3 id="modalLabel">Delete configuration</h3>' + '</div>' + '<div class="modal-body">' + '<p>Do you really want to delete this record?</p>' + '</div>' + '<div class="modal-footer">' + '<button class="btn no">No</button>' + '<button class="btn btn-primary yes">Yes</button>' + '</div>' + '</div>';
+    },
+    ui: {
+      modal: "#deleteModal"
+    },
     onNo: function(event) {
-      return this.$el.modal("hide");
+      return this.ui.modal.modal("hide");
     },
     onYes: function(event) {
-      return this.$el.modal("hide");
+      return this.ui.modal.modal("hide");
     },
-    render: function() {
-      this.$el = $("#deleteModal");
-      this.delegateEvents();
-      this.$el.modal({
+    onRender: function() {
+      var _this = this;
+      $("body").append(this.$el);
+      this.ui.modal.on('hidden', function() {
+        return _this.remove();
+      });
+      return this.ui.modal.modal({
         show: true
       });
-      return this;
     }
   });
 

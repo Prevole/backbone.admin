@@ -33,7 +33,7 @@ Admin.CrudModule = Admin.Module.extend
   onCreate: (action) ->
     view = new @views.create.view()
 
-    view.on "create", (modelAttributes) =>
+    @listenTo view, "create", (modelAttributes) =>
       @collection.create modelAttributes
       @trigger "action:route", "main"
 
@@ -42,18 +42,17 @@ Admin.CrudModule = Admin.Module.extend
   onEdit: (action) ->
     view = new @views.edit.view(model: _.model @collection, action)
 
-    view.on "edit", (modelAttributes) =>
+    @listenTo view, "edit", (modelAttributes) =>
       view.model.save(modelAttributes)
       @trigger "action:route", "main"
 
     action.updatedRegions[@views.edit.region] = _.view view
 
   onDelete: (action) ->
-    view = new @views.delete.view(model: _.model(@collection, action))
+    view = new @views.delete.view({model: _.model(@collection, action)})
 
-    view.on "delete", =>
-      view.model.destroy()
-#      @collection.fetch()
+    @listenTo view, "delete", (model) =>
+      model.destroy()
       @trigger "action:noroute", "main"
 
     view.render()

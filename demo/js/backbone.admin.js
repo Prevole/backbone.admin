@@ -482,7 +482,7 @@ then the route to reach should not be available anymore. This is the reason why 
         var view,
           _this = this;
         view = new this.views.create.view();
-        view.on("create", function(modelAttributes) {
+        this.listenTo(view, "create", function(modelAttributes) {
           _this.collection.create(modelAttributes);
           return _this.trigger("action:route", "main");
         });
@@ -494,7 +494,7 @@ then the route to reach should not be available anymore. This is the reason why 
         view = new this.views.edit.view({
           model: _.model(this.collection, action)
         });
-        view.on("edit", function(modelAttributes) {
+        this.listenTo(view, "edit", function(modelAttributes) {
           view.model.save(modelAttributes);
           return _this.trigger("action:route", "main");
         });
@@ -506,8 +506,8 @@ then the route to reach should not be available anymore. This is the reason why 
         view = new this.views["delete"].view({
           model: _.model(this.collection, action)
         });
-        view.on("delete", function() {
-          view.model.destroy();
+        this.listenTo(view, "delete", function(model) {
+          model.destroy();
           return _this.trigger("action:noroute", "main");
         });
         return view.render();
@@ -530,28 +530,24 @@ then the route to reach should not be available anymore. This is the reason why 
         return this.trigger("edit", this.modelAttributes());
       }
     });
-    Admin.DeleteView = Backbone.View.extend({
-      triggerMethod: Marionette.triggerMethod,
+    Admin.DeleteView = Marionette.ItemView.extend({
       events: {
         "click .no": "no",
         "click .yes": "yes"
       },
       initialize: function(options) {
-        if (options.model === void 0) {
+        if (options === void 0 || options.model === void 0) {
           throw new Error("No model given for the delete view when it is mandatory");
         }
-        return this.model = options.model;
       },
       no: function(event) {
         event.preventDefault();
-        this.triggerMethod("no", event);
-        return this.remove();
+        return this.triggerMethod("no", event);
       },
       yes: function(event) {
         event.preventDefault();
         this.triggerMethod("yes", event);
-        this.trigger("delete");
-        return this.remove();
+        return this.trigger("delete", this.model);
       }
     });
     Admin.MainRegion = (function(_super) {

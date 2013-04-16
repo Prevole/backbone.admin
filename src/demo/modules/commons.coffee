@@ -113,16 +113,34 @@ ModelCollection = class extends Backbone.Collection
 The view to delete a record
 ###
 DeleteView = Admin.DeleteView.extend
-  tagName: "div"
+  template: (data) ->
+    '<div id="deleteModal" class="modal hide fade" tabindex="1" role="dialog">' +
+      '<div class="modal-header">' +
+        '<button class="close no" type="button">x</button>' +
+        '<h3 id="modalLabel">Delete configuration</h3>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<p>Do you really want to delete this record?</p>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn no">No</button>' +
+        '<button class="btn btn-primary yes">Yes</button>' +
+      '</div>' +
+    '</div>'
+
+  ui:
+    modal: "#deleteModal"
 
   onNo: (event) ->
-    @$el.modal("hide")
+    @ui.modal.modal "hide"
 
   onYes: (event) ->
-    @$el.modal("hide")
+    @ui.modal.modal "hide"
 
-  render: ->
-    @$el = $("#deleteModal")
-    @delegateEvents()
-    @$el.modal(show: true)
-    @
+  onRender: ->
+    $("body").append(@$el)
+
+    @ui.modal.on 'hidden', =>
+      @remove()
+
+    @ui.modal.modal(show: true)

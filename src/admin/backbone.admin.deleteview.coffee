@@ -1,22 +1,17 @@
-Admin.DeleteView = Backbone.View.extend
-  triggerMethod: Marionette.triggerMethod
-
+Admin.DeleteView = Marionette.ItemView.extend
   events:
     "click .no": "no"
     "click .yes": "yes"
 
   initialize: (options) ->
-    throw new Error "No model given for the delete view when it is mandatory" if options.model is undefined
-
-    @model = options.model
+    if options is undefined || options.model is undefined
+      throw new Error "No model given for the delete view when it is mandatory"
 
   no: (event) ->
     event.preventDefault()
     @triggerMethod "no", event
-    @remove()
 
   yes: (event) ->
     event.preventDefault()
     @triggerMethod "yes", event
-    @trigger "delete"
-    @remove()
+    @trigger "delete", @model
