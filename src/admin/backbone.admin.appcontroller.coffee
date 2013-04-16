@@ -174,11 +174,9 @@ Admin.ApplicationController = class
 
   actionExecuted = (action) ->
     unless _.isNull(action.updatedRegions)
-  #    for name in @regionNames
-  #      @[name].close()
-
       for key in _.keys(action.updatedRegions)
         unless @[key] is undefined
+          @[key].close()
           @[key].show action.updatedRegions[key].view
 
       @router.navigate action.route() if not _.isNull(@router) and action.isRoutable
