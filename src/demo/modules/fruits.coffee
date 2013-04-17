@@ -75,7 +75,7 @@ FormFruitView = Admin.FormView.extend
   ui:
     name: "#name"
 
-  onCreate: (event) ->
+  onDoCreate: (event) ->
     @createOrUpdate()
     fruitCollection.addToOriginal @model
 

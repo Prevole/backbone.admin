@@ -7,7 +7,7 @@ Admin.DeleteView = Marionette.ItemView.extend
     if options is undefined || options.model is undefined
       throw new Error "No model given for the delete view when it is mandatory"
 
-  onYes: (event) ->
+  onDoDelete: (event) ->
     @model.destroy()
 
   no: (event) ->
@@ -17,6 +17,7 @@ Admin.DeleteView = Marionette.ItemView.extend
   yes: (event) ->
     event.preventDefault()
 
+    @triggerMethod "do:delete", event
     @triggerMethod "yes", event
 
     @trigger "deleted"#, @model

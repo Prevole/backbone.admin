@@ -1,5 +1,5 @@
 /*
- * Backbone.Admin - v0.0.5
+ * Backbone.Admin - v0.0.6
  * Copyright (c) 2013-04-17 Laurent Prevost (prevole) <prevole@prevole.ch>
  * Distributed under MIT license
  * https://github.com/prevole/backbone.admin
@@ -529,20 +529,20 @@ then the route to reach should not be available anymore. This is the reason why 
       createOrUpdate: function() {
         return this.model.save(this.modelAttributes());
       },
-      onCreate: function(event) {
+      onDoCreate: function(event) {
         return this.createOrUpdate();
       },
-      onEdit: function(event) {
+      onDoEdit: function(event) {
         return this.createOrUpdate();
       },
       create: function(event) {
         event.preventDefault();
-        this.triggerMethod("create", event);
+        this.triggerMethod("do:create", event);
         return this.trigger("created");
       },
       edit: function(event) {
         event.preventDefault();
-        this.triggerMethod("edit", event);
+        this.triggerMethod("do:edit", event);
         return this.trigger("updated");
       }
     });
@@ -556,7 +556,7 @@ then the route to reach should not be available anymore. This is the reason why 
           throw new Error("No model given for the delete view when it is mandatory");
         }
       },
-      onYes: function(event) {
+      onDoDelete: function(event) {
         return this.model.destroy();
       },
       no: function(event) {
@@ -565,6 +565,7 @@ then the route to reach should not be available anymore. This is the reason why 
       },
       yes: function(event) {
         event.preventDefault();
+        this.triggerMethod("do:delete", event);
         this.triggerMethod("yes", event);
         return this.trigger("deleted");
       }

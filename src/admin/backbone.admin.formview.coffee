@@ -9,22 +9,22 @@ Admin.FormView = Backbone.Marionette.ItemView.extend
   createOrUpdate: ->
     @model.save @modelAttributes()
 
-  onCreate: (event) ->
+  onDoCreate: (event) ->
     @createOrUpdate()
 
-  onEdit: (event) ->
+  onDoEdit: (event) ->
     @createOrUpdate()
 
   create: (event) ->
     event.preventDefault()
 
-    @triggerMethod "create", event
+    @triggerMethod "do:create", event
 
     @trigger "created"#, @modelAttributes()
 
   edit: (event) ->
     event.preventDefault()
 
-    @triggerMethod "edit", event
+    @triggerMethod "do:edit", event
 
     @trigger "updated"#, @modelAttributes()

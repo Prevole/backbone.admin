@@ -719,7 +719,7 @@
     ui: {
       name: "#name"
     },
-    onCreate: function(event) {
+    onDoCreate: function(event) {
       this.createOrUpdate();
       return fruitCollection.addToOriginal(this.model);
     }
