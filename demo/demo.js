@@ -4,6 +4,11 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   Backbone.sync = function(method, model, options) {
+    if (!model.has('id')) {
+      model.set({
+        id: _.random(0, 1000)
+      });
+    }
     return model;
   };
 
@@ -98,8 +103,8 @@
       return this.originalModels = _.clone(models);
     };
 
-    _Class.prototype.create = function(attributes, options) {
-      return this.originalModels.push(new this.model(attributes));
+    _Class.prototype.addToOriginal = function(model) {
+      return this.originalModels.push(model);
     };
 
     _Class.prototype.remove = function(model, options) {
@@ -713,6 +718,10 @@
   FormFruitView = Admin.FormView.extend({
     ui: {
       name: "#name"
+    },
+    onCreate: function(event) {
+      this.createOrUpdate();
+      return fruitCollection.addToOriginal(this.model);
     }
   });
 
@@ -727,7 +736,6 @@
     template: "#createFruit",
     modelAttributes: function() {
       return {
-        id: _.random(0, 1000),
         name: this.ui.name.val()
       };
     }

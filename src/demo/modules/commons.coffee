@@ -54,8 +54,8 @@ ModelCollection = class extends Backbone.Collection
 
     @originalModels = _.clone models
 
-  create: (attributes, options) ->
-    @originalModels.push new @model(attributes)
+  addToOriginal: (model) ->
+    @originalModels.push model
 
   remove: (model, options) ->
     @originalModels = _.reject @originalModels, (currentModel) ->

@@ -1,6 +1,6 @@
 /*
  * Backbone.Admin - v0.0.5
- * Copyright (c) 2013-04-16 Laurent Prevost (prevole) <prevole@prevole.ch>
+ * Copyright (c) 2013-04-17 Laurent Prevost (prevole) <prevole@prevole.ch>
  * Distributed under MIT license
  * https://github.com/prevole/backbone.admin
  */
@@ -487,9 +487,10 @@ then the route to reach should not be available anymore. This is the reason why 
       onCreate: function(action) {
         var view,
           _this = this;
-        view = new this.views.create.view();
-        this.listenTo(view, "create", function(modelAttributes) {
-          _this.collection.create(modelAttributes);
+        view = new this.views.create.view({
+          model: new this.collection.model()
+        });
+        this.listenTo(view, "created", function() {
           return _this.trigger("action:route", "main");
         });
         return action.updatedRegions[this.views.create.region] = _.view(view);
@@ -500,8 +501,7 @@ then the route to reach should not be available anymore. This is the reason why 
         view = new this.views.edit.view({
           model: _.model(this.collection, action)
         });
-        this.listenTo(view, "edit", function(modelAttributes) {
-          view.model.save(modelAttributes);
+        this.listenTo(view, "updated", function() {
           return _this.trigger("action:route", "main");
         });
         return action.updatedRegions[this.views.edit.region] = _.view(view);
@@ -512,8 +512,7 @@ then the route to reach should not be available anymore. This is the reason why 
         view = new this.views["delete"].view({
           model: _.model(this.collection, action)
         });
-        this.listenTo(view, "delete", function(model) {
-          model.destroy();
+        this.listenTo(view, "deleted", function() {
           return _this.trigger("action:noroute", "main");
         });
         return view.render();
@@ -527,13 +526,24 @@ then the route to reach should not be available anymore. This is the reason why 
       modelAttributes: function() {
         throw new Error("Missing method getAttributes().");
       },
+      createOrUpdate: function() {
+        return this.model.save(this.modelAttributes());
+      },
+      onCreate: function(event) {
+        return this.createOrUpdate();
+      },
+      onEdit: function(event) {
+        return this.createOrUpdate();
+      },
       create: function(event) {
         event.preventDefault();
-        return this.trigger("create", this.modelAttributes());
+        this.triggerMethod("create", event);
+        return this.trigger("created");
       },
       edit: function(event) {
         event.preventDefault();
-        return this.trigger("edit", this.modelAttributes());
+        this.triggerMethod("edit", event);
+        return this.trigger("updated");
       }
     });
     Admin.DeleteView = Marionette.ItemView.extend({
@@ -546,6 +556,9 @@ then the route to reach should not be available anymore. This is the reason why 
           throw new Error("No model given for the delete view when it is mandatory");
         }
       },
+      onYes: function(event) {
+        return this.model.destroy();
+      },
       no: function(event) {
         event.preventDefault();
         return this.triggerMethod("no", event);
@@ -553,7 +566,7 @@ then the route to reach should not be available anymore. This is the reason why 
       yes: function(event) {
         event.preventDefault();
         this.triggerMethod("yes", event);
-        return this.trigger("delete", this.model);
+        return this.trigger("deleted");
       }
     });
     Admin.MainRegion = (function(_super) {

@@ -75,6 +75,10 @@ FormFruitView = Admin.FormView.extend
   ui:
     name: "#name"
 
+  onCreate: (event) ->
+    @createOrUpdate()
+    fruitCollection.addToOriginal @model
+
 ###
 ## CreateFruitView
 
@@ -84,7 +88,7 @@ CreateFruitView = FormFruitView.extend
   template: "#createFruit"
 
   modelAttributes: ->
-    {id: _.random(0, 1000), name: @ui.name.val()}
+    {name: @ui.name.val()}
 
 ###
 ## EditFruitView

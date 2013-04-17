@@ -1,4 +1,5 @@
 Backbone.sync = (method, model, options) ->
+  model.set(id: _.random(0, 1000)) unless model.has('id')
   model
 
 appController = new Admin.ApplicationController()

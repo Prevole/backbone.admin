@@ -6,12 +6,25 @@ Admin.FormView = Backbone.Marionette.ItemView.extend
   modelAttributes: ->
     throw new Error "Missing method getAttributes()."
 
+  createOrUpdate: ->
+    @model.save @modelAttributes()
+
+  onCreate: (event) ->
+    @createOrUpdate()
+
+  onEdit: (event) ->
+    @createOrUpdate()
+
   create: (event) ->
     event.preventDefault()
 
-    @trigger "create", @modelAttributes()
+    @triggerMethod "create", event
+
+    @trigger "created"#, @modelAttributes()
 
   edit: (event) ->
     event.preventDefault()
 
-    @trigger "edit", @modelAttributes()
+    @triggerMethod "edit", event
+
+    @trigger "updated"#, @modelAttributes()

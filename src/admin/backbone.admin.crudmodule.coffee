@@ -14,6 +14,8 @@ Admin.CrudModule = Admin.Module.extend
 
     throw new Error "Views must be defined" if @views is undefined
 
+
+
     # TODO: Compare the route actions with the list of views
 
   onMain: (action) ->
@@ -31,10 +33,10 @@ Admin.CrudModule = Admin.Module.extend
     action.updatedRegions[@views.main.region] = _.view view
 
   onCreate: (action) ->
-    view = new @views.create.view()
+    view = new @views.create.view(model: new @collection.model())
 
-    @listenTo view, "create", (modelAttributes) =>
-      @collection.create modelAttributes
+    @listenTo view, "created", =>
+#      @collection.create modelAttributes
       @trigger "action:route", "main"
 
     action.updatedRegions[@views.create.region] = _.view view
@@ -42,8 +44,8 @@ Admin.CrudModule = Admin.Module.extend
   onEdit: (action) ->
     view = new @views.edit.view(model: _.model @collection, action)
 
-    @listenTo view, "edit", (modelAttributes) =>
-      view.model.save(modelAttributes)
+    @listenTo view, "updated", =>
+#      view.model.save(modelAttributes)
       @trigger "action:route", "main"
 
     action.updatedRegions[@views.edit.region] = _.view view
@@ -51,8 +53,8 @@ Admin.CrudModule = Admin.Module.extend
   onDelete: (action) ->
     view = new @views.delete.view({model: _.model(@collection, action)})
 
-    @listenTo view, "delete", (model) =>
-      model.destroy()
+    @listenTo view, "deleted", =>
+#      model.destroy()
       @trigger "action:noroute", "main"
 
     view.render()
