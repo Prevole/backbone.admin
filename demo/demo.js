@@ -718,10 +718,6 @@
   FormFruitView = Admin.FormView.extend({
     ui: {
       name: "#name"
-    },
-    onDoCreate: function(event) {
-      this.createOrUpdate();
-      return fruitCollection.addToOriginal(this.model);
     }
   });
 
@@ -801,6 +797,12 @@
       main: "",
       create: "new",
       edit: "edit/:id"
+    };
+
+    _Class.prototype.onDoCreate = function(modelAttributes) {
+      var model;
+      model = fruitCollection.create(modelAttributes);
+      return fruitCollection.addToOriginal(model);
     };
 
     return _Class;

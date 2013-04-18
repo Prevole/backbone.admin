@@ -14,7 +14,11 @@ Admin.CrudModule = Admin.Module.extend
 
     throw new Error "Views must be defined" if @views is undefined
 
-
+#    @on "created", =>
+#      @trigger "action:route", "main"
+#
+#    @on "edited", =>
+#      @trigger "action:route", "main"
 
     # TODO: Compare the route actions with the list of views
 
@@ -35,26 +39,46 @@ Admin.CrudModule = Admin.Module.extend
   onCreate: (action) ->
     view = new @views.create.view(model: new @collection.model())
 
-    @listenTo view, "created", =>
-#      @collection.create modelAttributes
+    @listenTo view, "create", (modelAttributes) =>
+      model = @triggerMethod "do:create", modelAttributes
+      @trigger "created", model
       @trigger "action:route", "main"
 
+#    @listenTo view, "created", =>
+##      @collection.create modelAttributes
+#      @trigger "action:route", "main"
+
     action.updatedRegions[@views.create.region] = _.view view
+
+  onDoCreate: (modelAttributes) ->
+    @collection.create modelAttributes
 
   onEdit: (action) ->
     view = new @views.edit.view(model: _.model @collection, action)
 
-    @listenTo view, "updated", =>
-#      view.model.save(modelAttributes)
+    @listenTo view, "edit", (modelAttributes) =>
+      @triggerMethod "do:edit", view.model, modelAttributes
+      @trigger "edited", view.model
       @trigger "action:route", "main"
 
+#    @listenTo view, "edited", =>
+##      view.model.save(modelAttributes)
+#      @trigger "action:route", "main"
+
     action.updatedRegions[@views.edit.region] = _.view view
+
+  onDoEdit: (model, modelAttributes) ->
+    model.save modelAttributes
 
   onDelete: (action) ->
     view = new @views.delete.view({model: _.model(@collection, action)})
 
-    @listenTo view, "deleted", =>
-#      model.destroy()
+    @listenTo view, "delete", (model) =>
+      @triggerMethod "do:delete", model
+      @trigger "deleted", model
       @trigger "action:noroute", "main"
 
     view.render()
+
+  onDoDelete: (model) ->
+    model.destroy()

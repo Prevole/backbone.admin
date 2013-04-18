@@ -75,10 +75,6 @@ FormFruitView = Admin.FormView.extend
   ui:
     name: "#name"
 
-  onDoCreate: (event) ->
-    @createOrUpdate()
-    fruitCollection.addToOriginal @model
-
 ###
 ## CreateFruitView
 
@@ -130,6 +126,10 @@ FruitsModule = class extends Admin.CrudModule
     main:   ""
     create: "new"
     edit:   "edit/:id"
+
+  onDoCreate: (modelAttributes) ->
+    model = fruitCollection.create modelAttributes
+    fruitCollection.addToOriginal model
 
 appController.addInitializer ->
   @registerModule(new FruitsModule())

@@ -1,6 +1,6 @@
 /*
  * Backbone.Admin - v0.0.6
- * Copyright (c) 2013-04-17 Laurent Prevost (prevole) <prevole@prevole.ch>
+ * Copyright (c) 2013-04-18 Laurent Prevost (prevole) <prevole@prevole.ch>
  * Distributed under MIT license
  * https://github.com/prevole/backbone.admin
  */
@@ -490,10 +490,16 @@ then the route to reach should not be available anymore. This is the reason why 
         view = new this.views.create.view({
           model: new this.collection.model()
         });
-        this.listenTo(view, "created", function() {
+        this.listenTo(view, "create", function(modelAttributes) {
+          var model;
+          model = _this.triggerMethod("do:create", modelAttributes);
+          _this.trigger("created", model);
           return _this.trigger("action:route", "main");
         });
         return action.updatedRegions[this.views.create.region] = _.view(view);
+      },
+      onDoCreate: function(modelAttributes) {
+        return this.collection.create(modelAttributes);
       },
       onEdit: function(action) {
         var view,
@@ -501,10 +507,15 @@ then the route to reach should not be available anymore. This is the reason why 
         view = new this.views.edit.view({
           model: _.model(this.collection, action)
         });
-        this.listenTo(view, "updated", function() {
+        this.listenTo(view, "edit", function(modelAttributes) {
+          _this.triggerMethod("do:edit", view.model, modelAttributes);
+          _this.trigger("edited", view.model);
           return _this.trigger("action:route", "main");
         });
         return action.updatedRegions[this.views.edit.region] = _.view(view);
+      },
+      onDoEdit: function(model, modelAttributes) {
+        return model.save(modelAttributes);
       },
       onDelete: function(action) {
         var view,
@@ -512,10 +523,15 @@ then the route to reach should not be available anymore. This is the reason why 
         view = new this.views["delete"].view({
           model: _.model(this.collection, action)
         });
-        this.listenTo(view, "deleted", function() {
+        this.listenTo(view, "delete", function(model) {
+          _this.triggerMethod("do:delete", model);
+          _this.trigger("deleted", model);
           return _this.trigger("action:noroute", "main");
         });
         return view.render();
+      },
+      onDoDelete: function(model) {
+        return model.destroy();
       }
     });
     Admin.FormView = Backbone.Marionette.ItemView.extend({
@@ -526,24 +542,13 @@ then the route to reach should not be available anymore. This is the reason why 
       modelAttributes: function() {
         throw new Error("Missing method getAttributes().");
       },
-      createOrUpdate: function() {
-        return this.model.save(this.modelAttributes());
-      },
-      onDoCreate: function(event) {
-        return this.createOrUpdate();
-      },
-      onDoEdit: function(event) {
-        return this.createOrUpdate();
-      },
       create: function(event) {
         event.preventDefault();
-        this.triggerMethod("do:create", event);
-        return this.trigger("created");
+        return this.trigger("create", this.modelAttributes());
       },
       edit: function(event) {
         event.preventDefault();
-        this.triggerMethod("do:edit", event);
-        return this.trigger("updated");
+        return this.trigger("edit", this.modelAttributes());
       }
     });
     Admin.DeleteView = Marionette.ItemView.extend({
@@ -556,18 +561,14 @@ then the route to reach should not be available anymore. This is the reason why 
           throw new Error("No model given for the delete view when it is mandatory");
         }
       },
-      onDoDelete: function(event) {
-        return this.model.destroy();
-      },
       no: function(event) {
         event.preventDefault();
         return this.triggerMethod("no", event);
       },
       yes: function(event) {
         event.preventDefault();
-        this.triggerMethod("do:delete", event);
         this.triggerMethod("yes", event);
-        return this.trigger("deleted");
+        return this.trigger("delete", this.model);
       }
     });
     Admin.MainRegion = (function(_super) {
