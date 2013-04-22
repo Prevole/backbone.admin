@@ -84,7 +84,7 @@ module.exports = (grunt) ->
         options:
           extra: ['fileSearch', 'goToLine']
           colourScheme: 'friendly'
-          lineNums: true
+#          lineNums: true
           ignoreHidden: true
           exclude: 'demo,dist,doc,node_modules,spec'
         dest: 'doc'

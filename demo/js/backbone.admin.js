@@ -1,6 +1,6 @@
 /*
  * Backbone.Admin - v0.0.7
- * Copyright (c) 2013-04-20 Laurent Prevost (prevole) <prevole@prevole.ch>
+ * Copyright (c) 2013-04-22 Laurent Prevost (prevole) <prevole@prevole.ch>
  * Distributed under MIT license
  * https://github.com/prevole/backbone.admin
  */
@@ -56,10 +56,18 @@ then the route to reach should not be available anymore. This is the reason why 
     };
     authorizator = null;
     _.mixin({
-      view: function(view) {
+      /*
+      From a simple view object, create a complex object
+      like: `{view: viewObject}`
+        
+      @param {Object} view The view to wrap into an object
+      @return {Object} The view wrapped in an object
+      */
+
+      wrapView: function(view) {
         return _.object(["view"], [view]);
       },
-      model: function(collection, action) {
+      retrieveModel: function(collection, action) {
         if (action === void 0) {
           throw new Error("Action must be defined");
         }
@@ -71,7 +79,8 @@ then the route to reach should not be available anymore. This is the reason why 
         } else {
           return action.options.model;
         }
-      }
+      },
+      slice: Function.prototype.call.bind(Array.prototype.slice)
     });
     Action = (function() {
 
@@ -398,28 +407,26 @@ then the route to reach should not be available anymore. This is the reason why 
     })(Marionette.View);
     Admin.Module = Marionette.Controller.extend({
       constructor: function() {
-        var args;
+        Marionette.Controller.prototype.constructor.apply(this, _.slice(arguments));
         if (this.name === void 0) {
-          throw new Error("The name of the module must be defined");
+          throw new Error('The name of the module must be defined');
         }
         if (this.routeActions === void 0) {
-          throw new Error("At least one route action must be defined");
+          throw new Error('At least one route action must be defined');
         }
-        args = Array.prototype.slice.apply(arguments);
-        Marionette.Controller.prototype.constructor.apply(this, args);
         if (this.basePath === void 0) {
-          this.basePath = "" + (this.name.replace(/:/g, "/"));
+          this.basePath = "" + (this.name.replace(/:/g, '/'));
         }
-        this.basePath = _.str.endsWith(this.basePath, "/") ? this.basePath : "" + this.basePath + "/";
-        this.on("action:route", function(actionName, pathParameters, options) {
-          return this.trigger("action:module", ActionFactory.routeAction(this, actionName, pathParameters), options);
+        this.basePath = _.str.endsWith(this.basePath, '/') ? this.basePath : "" + this.basePath + "/";
+        this.on('action:route', function(actionName, pathParameters, options) {
+          return this.trigger('action:module', ActionFactory.routeAction(this, actionName, pathParameters), options);
         });
-        this.on("action:noroute", function(actionName, options) {
-          return this.trigger("action:module", ActionFactory.action(this, actionName, options));
+        this.on('action:noroute', function(actionName, options) {
+          return this.trigger('action:module', ActionFactory.action(this, actionName, options));
         });
-        return this.on("action:execute", function(action) {
-          this.triggerMethod(action.name, action);
-          return this.trigger("action:executed", action);
+        return this.on('action:execute', function(action) {
+          this.triggerMethod("action:" + action.name, action);
+          return this.trigger('action:executed', action);
         });
       },
       routes: function() {
@@ -441,13 +448,94 @@ then the route to reach should not be available anymore. This is the reason why 
         }
       }
     });
+    /*
+    ## Admin.CrudModule
+    
+    Default implementation of `CRUD` module. The four main actions are define like this:
+    
+    - `Create`: Create action for the creation of new records
+    - `Read`: List of the records
+    - `Update`: Edition of any existing record
+    - `Delete`: Deletion of any existing record
+    
+    For the `Create`, `Read` and `Update` actions, they are supposed to be backed by an `URL` that exists and
+    that could be called at any time. The purpose is to offer the possibility to bookmark the page.
+    
+    In the case of `Delete` action, it's a little different. Once a record is deleted, the resource is no more
+    existing and then the `Delete` cannot be called twice. In consequence, the `Delete` action is not expected
+    to have an `URL` that we could calle twice. It's more supposed to be handled by a confirmation popup or
+    something equivalent.
+    
+    ```
+    # Default options
+    options:
+      deltaPage: 2
+      css:
+        active: "active"
+        disabled: "disabled"
+        page: "page"
+      texts:
+        first: "<<"
+        previous: "<"
+        next: ">"
+        last: ">>"
+        filler: "..."
+      numbers: true
+      firstAndLast: true
+      previousAndNext: true
+    ```
+    
+    - **delatePage**: Number of pages shown before and after the active one (if available)
+    - **css**: Different style added for link `disabled`, `active` or `page`
+    - **texts**: Texts used for each link excepted the page numbers
+    - **numbers**: Enable/Disable page number links
+    - **firstAndLast**: Enable/Disable first and last links
+    - **previousAndNext**: Enable/Disable previous and next links
+    */
+
     Admin.CrudModule = Admin.Module.extend({
-      constructor: function() {
-        var args;
-        args = Array.prototype.slice.apply(arguments);
-        Admin.Module.prototype.constructor.apply(this, args);
+      /*
+      Constructor
+        
+      ```
+      # Options
+      options:
+        collection:
+        model:
+        views:
+        
+      ```
+      - **collection**: The collection that is managed by the module
+      - **model**: The model is mandatory if the collection does not contain one
+      - **views**: A list of views managed by the `CRUD` module. The views exptect to contain the following
+        ```
+        # Minimum views
+        views:
+          main:
+            view: ListViewClass
+            region: "regionToShowTheListView"
+          create:
+            view: CreateViewClass
+            region: "regionToShowTheCreateView"
+          edit:
+            view: EditViewClass
+            region: "regionToShowTheEditView"
+          delete:
+            view: DeleteViewClass
+        ```
+        
+        - **main**: Correspond to the principal view and acts as entry point for the module
+        - **create**: Allows creating new records
+        - **edit**: Allows editing existing records
+        - **delete**: Allows deleting existing views. As it's expected to be something like a popup, no region is required.
+        
+      @params {Object} options A list of options
+      */
+
+      constructor: function(options) {
+        Admin.Module.prototype.constructor.apply(this, _.slice(arguments));
         if (this.collection === void 0) {
-          throw new Error("The collection must be specified");
+          throw new Error('The collection must be specified');
         }
         if (_.isFunction(this.collection)) {
           if (this.model === void 0 && !(this.collection.prototype.model === void 0)) {
@@ -457,82 +545,317 @@ then the route to reach should not be available anymore. This is the reason why 
           this.model = this.collection.model;
         }
         if (this.model === void 0) {
-          throw new Error("The model must be specified");
+          throw new Error('The model must be specified');
         }
         if (this.views === void 0) {
-          throw new Error("Views must be defined");
+          throw new Error('Views must be defined');
         }
       },
-      onMain: function(action) {
-        var view,
-          _this = this;
+      /*
+      Execution of the main action
+        
+      @param {Admin.Action} action The action to enrich
+      @return {Admin.Action} The action updated
+      */
+
+      onActionMain: function(action) {
+        var view;
         view = new this.views.main.view;
-        view.on("new", function() {
-          return _this.trigger("action:route", "create");
+        this.listenTo(view, 'new', function() {
+          return this.trigger('action:route', 'create');
         });
-        view.on("edit", function(model) {
-          return _this.trigger("action:route", "edit", {
-            id: model.get("id")
+        this.listenTo(view, 'edit', function(model) {
+          return this.trigger('action:route', 'edit', {
+            id: model.get('id')
           }, {
             model: model
           });
         });
-        view.on("delete", function(model) {
-          return _this.trigger("action:noroute", "delete", {
+        this.listenTo(view, 'delete', function(model) {
+          return this.trigger('action:noroute', 'delete', {
             model: model
           });
         });
-        return action.updatedRegions[this.views.main.region] = _.view(view);
+        return action.updatedRegions[this.views.main.region] = _.wrapView(view);
       },
-      onCreate: function(action) {
+      /*
+      Execution of the create action
+        
+      TODO: Complete the documentation with the new additions
+        
+      @param {Admin.Action} The action to enrich
+      @return {Admin.Action} The action updated
+      */
+
+      onActionCreate: function(action) {
         var view,
           _this = this;
         view = new this.views.create.view({
-          model: new this.collection.model()
+          model: new this.collection.model
         });
-        this.listenTo(view, "create", function(modelAttributes) {
+        if (view.error) {
+          view.listenTo(this, 'create:invalid', view.error);
+        }
+        this.listenTo(view, 'create', function(modelAttributes) {
           var model;
-          model = _this.triggerMethod("do:create", modelAttributes);
-          _this.trigger("created", model);
-          return _this.trigger("action:route", "main");
+          model = _this.triggerMethod('create', modelAttributes);
+          if (model) {
+            _this.trigger('created', model);
+            return _this.trigger('action:route', 'main');
+          }
         });
-        return action.updatedRegions[this.views.create.region] = _.view(view);
+        return action.updatedRegions[this.views.create.region] = _.wrapView(view);
       },
-      onDoCreate: function(modelAttributes) {
-        return this.collection.create(modelAttributes);
-      },
-      onEdit: function(action) {
-        var view,
+      /*
+      Execute the model creation from the data retrieved from the create view
+        
+      By default, the creation is done through a creation of a new `Backbone.Model`
+      (or sub class) and the call to the `save` function with the attributes given
+      This ensure that the validation of the `Backbone.Model` could be done properly
+      and the potential errors could be handled. The `model` will only be added to the
+      collection if the validation (client and server) is ok. This will be done through
+      the call of `onCreateSuccess`.
+        
+      The `Backbone.Model.save` function is called with the `options` enriched
+      by `success(model, response, options)` and `error(model, xhr, options)`. If these
+      options are already provided, they will be overriden.
+        
+      To use the `success` and `error` callbacks, you must override the functions
+      `onCreateSuccess` and `onCreateError`. These functions are called in the
+      `success` and `error` function givent to the `save` options.
+        
+      To use custom options with the `create` and `isValid` functions, you can
+      define a `hash` or a `function` called `createOptions` on the `CRUD` module.
+        
+      The `sync` function from the model is then used to propagate the
+      creation to the backend.
+        
+      @param {Object} modelAttributes The model attributes to create the model
+      @return {Backbone.Model} The model created or false
+      */
+
+      onCreate: function(modelAttributes) {
+        var model, options,
           _this = this;
+        model = new this.collection.model(modelAttributes, {
+          url: this.collection.url
+        });
+        this.listenTo(model, 'invalid', function(model, error, options) {
+          return _this.trigger('create:invalid', model, error, options);
+        });
+        options = _.result(this, 'createOptions') || {};
+        if (model.isValid(options)) {
+          return model.save(null, _.extend(options, {
+            success: function(model, response, options) {
+              return _this.triggerMethod('create:success', model, response, options);
+            },
+            error: function(model, xhr, options) {
+              return _this.triggerMethod('create:error', model, xhr, options);
+            }
+          }));
+        } else {
+          return false;
+        }
+      },
+      /*
+      Function called when a `Backbone.Model` has been successfully created
+      and synced with the backend.
+        
+      The model given will be added to the `CRUD` module `collection`
+        
+      @param {Backbone.Model} model The model successfully created
+      @param {Object} response The response from the backend
+      @param {Object} options The options given when the model is created
+      */
+
+      onCreateSuccess: function(model, response, options) {
+        return this.collection.add(model);
+      },
+      /*
+      Function called when a `Backbone.Model` cannot be created and the
+      backend returned an error
+        
+      @param {Backbone.Model} model The model in error
+      @param {Xhr} xhr The request object with the response
+      @param {Object} options The options given when the model is created
+      */
+
+      onCreateError: function(model, xhr, options) {},
+      /*
+      Execution of the edition action
+        
+      @param {Admin.Action} The action to enrich
+      @return {Admin.Action} The action updated
+      */
+
+      onActionEdit: function(action) {
+        var view;
         view = new this.views.edit.view({
-          model: _.model(this.collection, action)
+          model: _.retrieveModel(this.collection, action)
         });
-        this.listenTo(view, "edit", function(modelAttributes) {
-          _this.triggerMethod("do:edit", view.model, modelAttributes);
-          _this.trigger("edited", view.model);
-          return _this.trigger("action:route", "main");
+        view.listenTo(view.model, 'invalid', view.error);
+        this.listenTo(view, 'edit', function(modelAttributes) {
+          if (this.triggerMethod('edit', view.model, modelAttributes)) {
+            this.trigger('edited', view.model);
+            return this.trigger('action:route', 'main');
+          }
         });
-        return action.updatedRegions[this.views.edit.region] = _.view(view);
+        return action.updatedRegions[this.views.edit.region] = _.wrapView(view);
       },
-      onDoEdit: function(model, modelAttributes) {
-        return model.save(modelAttributes);
+      /*
+      Execute the model edition from the data retrieved from the edit view
+        
+      By default, the edition is done through `Backbone.Model.save` which
+      update and save the model and also run the `sync` function
+      to propagate the edition to the backend.
+        
+        
+      By default, the edition is done through a call to `Backbone.Model.set` with the
+      attributes given and force the `validate` option to be `true` to ensure the validation
+      is done during the `set` function call. The potential errors could be handled by this
+      process. The `model` will only be saved if the validation (client and server) is ok.
+        
+      The `Backbone.Model.save` function is called with the `options` enriched by
+      `success(model, response, options)`, `error(model, xhr, options)` and `validate = false`.
+      If these options are already provided, they will be overriden.
+        
+      To use the `success` and `error` callbacks, you must override the functions
+      `onEditSuccess` and `onEditError`. These functions are called in the
+      `success` and `error` function givent to the `save` options.
+        
+      The `validate` option set to `false` for the `save` function avoid double
+      validation. Since the validation is already done in the `set` function, it is
+      not necessary to do it twice.
+        
+      To use custom options with the `save` and `validate` functions, you can define
+      a `hash` or a `function` called `editOptions` on the `CRUD` module.
+        
+      The `sync` function from the model is then used to propagate the
+      edition to the backend.
+        
+      @param {Backbone.Model} model The model to update
+      @param {Object} modelAttributes The model attributes to update the model
+      @return {Backbone.Model} The model updated
+      */
+
+      onEdit: function(model, modelAttributes) {
+        var options,
+          _this = this;
+        options = _.extend(_.result(this, 'editOptions') || {}, {
+          validate: true
+        });
+        if (model.set(modelAttributes, options)) {
+          return model.save(null, _.extend(options, {
+            validate: false,
+            success: function(model, response, options) {
+              return _this.triggerMethod('edit:success', model, response, options);
+            },
+            error: function(model, xhr, options) {
+              return _this.triggerMethod('edit:error', model, xhr, options);
+            }
+          }));
+        } else {
+          return false;
+        }
       },
-      onDelete: function(action) {
+      /*
+      Function called when a `Backbone.Model` has been successfully saved
+      and synced with the backend.
+        
+      @param {Backbone.Model} model The model successfully edited
+      @param {Object} response The response from the backend
+      @param {Object} options The options given when the model is edited
+      */
+
+      onEditSuccess: function(model, response, options) {},
+      /*
+      Function called when a `Backbone.Model` cannot be saved and the
+      backend returned an error
+        
+      @param {Backbone.Model} model The model in error
+      @param {Xhr} xhr The request object with the response
+      @param {Object} options The options given when the model is edited
+      */
+
+      onEditError: function(model, xhr, options) {},
+      /*
+      Execution of the deletion action.
+        
+      @param {Admin.Action} The action to enrich
+      */
+
+      onActionDelete: function(action) {
         var view,
           _this = this;
         view = new this.views["delete"].view({
-          model: _.model(this.collection, action)
+          model: _.retrieveModel(this.collection, action)
         });
-        this.listenTo(view, "delete", function(model) {
-          _this.triggerMethod("do:delete", model);
-          _this.trigger("deleted", model);
-          return _this.trigger("action:noroute", "main");
+        this.listenTo(view, 'delete', function(model) {
+          if (_this.triggerMethod('delete', model)) {
+            return _this.trigger('deleted', model);
+          }
         });
-        return view.render();
+        view.render();
       },
-      onDoDelete: function(model) {
-        return model.destroy();
-      }
+      /*
+      Execute the model deletion of the model
+        
+      By default, the deletion is done through `Backbone.Model.destroy` which
+      delete the model, clear the model from the collection and also run the
+      `sync` function to propagate the deletion to the backend.
+        
+      The `Backbone.Model.destroy` function is called with the `options` enriched by
+      `success(model, response, options)`, `error(model, xhr, options)`. If these options
+      are already provided, they will be overriden.
+        
+      To use the `success` and `error` callbacks, you must override the functions
+      `onDeleteSuccess` and `onDeleteError`. These functions are called in the
+      `success` and `error` function givent to the `save` options.
+        
+      To use custom options with the `destroy` function, you can define
+      a `hash` or a `function` called `deleteOptions` on the `CRUD` module.
+        
+      The `sync` function from the model is then used to propagate the
+      deletion to the backend.
+        
+      @param {Backbone.Model} model The model to delete
+      @return {Backbone.Model} The model deleted
+      */
+
+      onDelete: function(model) {
+        var options,
+          _this = this;
+        options = _.result(this, 'deleteOptions') || {};
+        return model.destroy(null, _.extend(options, {
+          validate: false,
+          success: function(model, response, options) {
+            return _this.triggerMethod('delete:success', model, response, options);
+          },
+          error: function(model, xhr, options) {
+            return _this.triggerMethod('delete:error', model, xhr, options);
+          }
+        }));
+      },
+      /*
+      Function called when a `Backbone.Model` has been successfully removed
+      on the backend.
+        
+      @param {Backbone.Model} model The model successfully destroyed
+      @param {Object} response The response from the backend
+      @param {Object} options The options given when the model is destroyed
+      */
+
+      onDeleteSuccess: function(model, response, options) {},
+      /*
+      Function called when a `Backbone.Model` cannot be removed and the
+      backend returned an error
+        
+      @param {Backbone.Model} model The model in error
+      @param {Xhr} xhr The request object with the response
+      @param {Object} options The options given when the model is destroyed
+      */
+
+      onDeleteError: function(model, xhr, options) {}
     });
     Admin.FormView = Backbone.Marionette.ItemView.extend({
       events: {
@@ -549,7 +872,8 @@ then the route to reach should not be available anymore. This is the reason why 
       edit: function(event) {
         event.preventDefault();
         return this.trigger("edit", this.modelAttributes());
-      }
+      },
+      error: function(model, error, options) {}
     });
     Admin.DeleteView = Marionette.ItemView.extend({
       events: {

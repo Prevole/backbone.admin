@@ -39,20 +39,18 @@
     %script#createFruit{type: "text/template"}
       %h2= "Add fruit"
       %from
-        %p
+        .control-group
           %label= "Name"
           %input{id: "name", type: "text", name: "name"}
         %button.btn.create= "Create"
-        %button.btn.cancel= "Cancel"
 
     %script#editFruit{type: "text/template"}
       %h2= "Edit fruit"
       %from
-        %p
+        .control-group
           %label= "Name"
           %input{id: "name", type: "text", name: "name"}
         %button.btn.edit= "Edit"
-        %button.btn.cancel= "Cancel"
 
     %script#createBook{type: "text/template"}
       %h2= "Add book"
@@ -61,7 +59,6 @@
           %label= "Title"
           %input{id: "title", type: "text", name: "title"}
         %button.btn.create= "Create"
-        %button.btn.cancel= "Cancel"
 
     %script#editBook{type: "text/template"}
       %h2= "Edit book"
@@ -70,7 +67,6 @@
           %label= "title"
           %input{id: "title", type: "text", name: "title"}
         %button.btn.edit= "Edit"
-        %button.btn.cancel= "Cancel"
 
       -#%p.lead= "Backbone Datagrid is a plugin to organize present data with some controls like sorting, pagging, filtering. "
       -#  %a{link: "http://backbonejs.org", target: "_blank"}= "Backbone"

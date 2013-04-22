@@ -597,6 +597,17 @@
 
     _Class.prototype.fields = ["id", "name"];
 
+    _Class.prototype.regexName = /^[a-zA-Z]+$/;
+
+    _Class.prototype.validate = function(attrs, options) {
+      console.log("There");
+      if (!attrs.name.match(this.regexName)) {
+        return {
+          name: 'The name can contain only lower and upercase letters and must contain at least one letter.'
+        };
+      }
+    };
+
     return _Class;
 
   })(DataModel);
@@ -718,6 +729,14 @@
   FormFruitView = Admin.FormView.extend({
     ui: {
       name: "#name"
+    },
+    error: function(model, error, options) {
+      var field;
+      field = this.ui.name.closest('.control-group');
+      field.addClass('error');
+      if (field.find('.help-inline').length === 0) {
+        return field.append($('<span class="help-inline"></span>').text(error.name));
+      }
     }
   });
 
@@ -799,18 +818,17 @@
       edit: "edit/:id"
     };
 
-    _Class.prototype.onDoCreate = function(modelAttributes) {
-      var model;
-      model = fruitCollection.create(modelAttributes);
-      return fruitCollection.addToOriginal(model);
-    };
-
     return _Class;
 
   })(Admin.CrudModule);
 
   appController.addInitializer(function() {
-    return this.registerModule(new FruitsModule());
+    var fruitModule;
+    fruitModule = new FruitsModule();
+    fruitModule.on('created', function(model) {
+      return fruitCollection.addToOriginal(model);
+    });
+    return this.registerModule(fruitModule);
   });
 
   NavigationView = (function(_super) {

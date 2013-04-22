@@ -8,6 +8,13 @@ The fruit model to handle the fruit data
 FruitModel = class extends DataModel
   fields: ["id", "name"]
 
+  regexName: /^[a-zA-Z]+$/
+
+  validate: (attrs, options) ->
+    console.log "There"
+    unless attrs.name.match @regexName
+      return {name: 'The name can contain only lower and upercase letters and must contain at least one letter.'}
+
 ###
 ## FruitCollection
 
@@ -75,6 +82,13 @@ FormFruitView = Admin.FormView.extend
   ui:
     name: "#name"
 
+  error: (model, error, options) ->
+    field = @ui.name.closest '.control-group'
+    field.addClass 'error'
+
+    if (field).find('.help-inline').length == 0
+      field.append($('<span class="help-inline"></span>').text(error.name))
+
 ###
 ## CreateFruitView
 
@@ -127,9 +141,10 @@ FruitsModule = class extends Admin.CrudModule
     create: "new"
     edit:   "edit/:id"
 
-  onDoCreate: (modelAttributes) ->
-    model = fruitCollection.create modelAttributes
+appController.addInitializer ->
+  fruitModule = new FruitsModule()
+
+  fruitModule.on 'created', (model) ->
     fruitCollection.addToOriginal model
 
-appController.addInitializer ->
-  @registerModule(new FruitsModule())
+  @registerModule(fruitModule)

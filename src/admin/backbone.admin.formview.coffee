@@ -32,3 +32,5 @@ Admin.FormView = Backbone.Marionette.ItemView.extend
 #    @triggerMethod "do:edit", event
 #
 #    @trigger "updated"#, @modelAttributes()
+
+  error: (model, error, options) ->
