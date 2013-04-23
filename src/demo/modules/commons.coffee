@@ -57,10 +57,9 @@ ModelCollection = class extends Backbone.Collection
   addToOriginal: (model) ->
     @originalModels.push model
 
-  remove: (model, options) ->
+  removeFromOriginal: (model) ->
     @originalModels = _.reject @originalModels, (currentModel) ->
       currentModel.id == model.id
-    super(model, options)
 
   sync: (method, model, options) ->
     storedSuccess = options.success

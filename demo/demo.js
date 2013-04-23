@@ -4,11 +4,14 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   Backbone.sync = function(method, model, options) {
+    var success;
     if (!model.has('id')) {
       model.set({
         id: _.random(0, 1000)
       });
     }
+    success = _.debounce(options.success, 100);
+    success(model, null, options);
     return model;
   };
 
@@ -107,11 +110,10 @@
       return this.originalModels.push(model);
     };
 
-    _Class.prototype.remove = function(model, options) {
-      this.originalModels = _.reject(this.originalModels, function(currentModel) {
+    _Class.prototype.removeFromOriginal = function(model) {
+      return this.originalModels = _.reject(this.originalModels, function(currentModel) {
         return currentModel.id === model.id;
       });
-      return _Class.__super__.remove.call(this, model, options);
     };
 
     _Class.prototype.sync = function(method, model, options) {
@@ -827,6 +829,10 @@
     fruitModule = new FruitsModule();
     fruitModule.on('created', function(model) {
       return fruitCollection.addToOriginal(model);
+    });
+    fruitModule.on('deleted', function(model) {
+      fruitCollection.removeFromOriginal(model);
+      return fruitCollection.fetch();
     });
     return this.registerModule(fruitModule);
   });

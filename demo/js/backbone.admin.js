@@ -1,6 +1,6 @@
 /*
  * Backbone.Admin - v0.0.7
- * Copyright (c) 2013-04-22 Laurent Prevost (prevole) <prevole@prevole.ch>
+ * Copyright (c) 2013-04-23 Laurent Prevost (prevole) <prevole@prevole.ch>
  * Distributed under MIT license
  * https://github.com/prevole/backbone.admin
  */
@@ -668,9 +668,7 @@ then the route to reach should not be available anymore. This is the reason why 
       @param {Object} options The options given when the model is created
       */
 
-      onCreateSuccess: function(model, response, options) {
-        return this.collection.add(model);
-      },
+      onCreateSuccess: function(model, response, options) {},
       /*
       Function called when a `Backbone.Model` cannot be created and the
       backend returned an error
@@ -826,8 +824,7 @@ then the route to reach should not be available anymore. This is the reason why 
         var options,
           _this = this;
         options = _.result(this, 'deleteOptions') || {};
-        return model.destroy(null, _.extend(options, {
-          validate: false,
+        return model.destroy(_.extend(options, {
           success: function(model, response, options) {
             return _this.triggerMethod('delete:success', model, response, options);
           },

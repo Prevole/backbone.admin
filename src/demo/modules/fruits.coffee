@@ -147,4 +147,9 @@ appController.addInitializer ->
   fruitModule.on 'created', (model) ->
     fruitCollection.addToOriginal model
 
+  fruitModule.on 'deleted', (model) ->
+    fruitCollection.removeFromOriginal model
+    fruitCollection.fetch()
+
+
   @registerModule(fruitModule)

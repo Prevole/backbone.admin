@@ -216,7 +216,7 @@ Admin.CrudModule = Admin.Module.extend
   @param {Object} options The options given when the model is created
   ###
   onCreateSuccess: (model, response, options) ->
-    @collection.add model
+    # TODO: Comment the emptyness of the function
 
   ###
   Function called when a `Backbone.Model` cannot be created and the
@@ -382,8 +382,7 @@ Admin.CrudModule = Admin.Module.extend
     # Force the usage of custom success and error callbacks
     # that cannot be overriden by the options. Also force to not validate
     # since the validation already occured with the set just done before
-    return model.destroy null, _.extend(options, {
-      validate: false
+    return model.destroy _.extend(options, {
       success: (model, response, options) =>
         @triggerMethod 'delete:success', model, response, options
       error: (model, xhr, options) =>
