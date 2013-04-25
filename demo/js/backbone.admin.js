@@ -1,6 +1,6 @@
 /*
  * Backbone.Admin - v0.0.7
- * Copyright (c) 2013-04-23 Laurent Prevost (prevole) <prevole@prevole.ch>
+ * Copyright (c) 2013-04-25 Laurent Prevost (prevole) <prevole@prevole.ch>
  * Distributed under MIT license
  * https://github.com/prevole/backbone.admin
  */
@@ -597,12 +597,7 @@ then the route to reach should not be available anymore. This is the reason why 
           view.listenTo(this, 'create:invalid', view.error);
         }
         this.listenTo(view, 'create', function(modelAttributes) {
-          var model;
-          model = _this.triggerMethod('create', modelAttributes);
-          if (model) {
-            _this.trigger('created', model);
-            return _this.trigger('action:route', 'main');
-          }
+          return _this.triggerMethod('create', modelAttributes);
         });
         return action.updatedRegions[this.views.create.region] = _.wrapView(view);
       },
@@ -661,14 +656,15 @@ then the route to reach should not be available anymore. This is the reason why 
       Function called when a `Backbone.Model` has been successfully created
       and synced with the backend.
         
-      The model given will be added to the `CRUD` module `collection`
-        
       @param {Backbone.Model} model The model successfully created
       @param {Object} response The response from the backend
       @param {Object} options The options given when the model is created
       */
 
-      onCreateSuccess: function(model, response, options) {},
+      onCreateSuccess: function(model, response, options) {
+        this.trigger('created', model);
+        return this.trigger('action:route', 'main');
+      },
       /*
       Function called when a `Backbone.Model` cannot be created and the
       backend returned an error
@@ -693,10 +689,7 @@ then the route to reach should not be available anymore. This is the reason why 
         });
         view.listenTo(view.model, 'invalid', view.error);
         this.listenTo(view, 'edit', function(modelAttributes) {
-          if (this.triggerMethod('edit', view.model, modelAttributes)) {
-            this.trigger('edited', view.model);
-            return this.trigger('action:route', 'main');
-          }
+          return this.triggerMethod('edit', view.model, modelAttributes);
         });
         return action.updatedRegions[this.views.edit.region] = _.wrapView(view);
       },
@@ -765,7 +758,10 @@ then the route to reach should not be available anymore. This is the reason why 
       @param {Object} options The options given when the model is edited
       */
 
-      onEditSuccess: function(model, response, options) {},
+      onEditSuccess: function(model, response, options) {
+        this.trigger('edited', model);
+        return this.trigger('action:route', 'main');
+      },
       /*
       Function called when a `Backbone.Model` cannot be saved and the
       backend returned an error
@@ -789,9 +785,7 @@ then the route to reach should not be available anymore. This is the reason why 
           model: _.retrieveModel(this.collection, action)
         });
         this.listenTo(view, 'delete', function(model) {
-          if (_this.triggerMethod('delete', model)) {
-            return _this.trigger('deleted', model);
-          }
+          return _this.triggerMethod('delete', model);
         });
         view.render();
       },
@@ -842,7 +836,9 @@ then the route to reach should not be available anymore. This is the reason why 
       @param {Object} options The options given when the model is destroyed
       */
 
-      onDeleteSuccess: function(model, response, options) {},
+      onDeleteSuccess: function(model, response, options) {
+        return this.trigger('deleted', model);
+      },
       /*
       Function called when a `Backbone.Model` cannot be removed and the
       backend returned an error

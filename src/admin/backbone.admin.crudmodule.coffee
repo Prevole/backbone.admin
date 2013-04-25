@@ -15,33 +15,6 @@ In the case of `Delete` action, it's a little different. Once a record is delete
 existing and then the `Delete` cannot be called twice. In consequence, the `Delete` action is not expected
 to have an `URL` that we could calle twice. It's more supposed to be handled by a confirmation popup or
 something equivalent.
-
-```
-# Default options
-options:
-  deltaPage: 2
-  css:
-    active: "active"
-    disabled: "disabled"
-    page: "page"
-  texts:
-    first: "<<"
-    previous: "<"
-    next: ">"
-    last: ">>"
-    filler: "..."
-  numbers: true
-  firstAndLast: true
-  previousAndNext: true
-```
-
-- **delatePage**: Number of pages shown before and after the active one (if available)
-- **css**: Different style added for link `disabled`, `active` or `page`
-- **texts**: Texts used for each link excepted the page numbers
-- **numbers**: Enable/Disable page number links
-- **firstAndLast**: Enable/Disable first and last links
-- **previousAndNext**: Enable/Disable previous and next links
-
 ###
 Admin.CrudModule = Admin.Module.extend
   ###
@@ -141,15 +114,7 @@ Admin.CrudModule = Admin.Module.extend
     # Listen to the creation of the new model from the view
     @listenTo view, 'create', (modelAttributes) =>
       # Delegates the model creation
-      model = @triggerMethod 'create', modelAttributes
-
-      # Check if the creation is done
-      if model
-        # Notice the model creation
-        @trigger 'created', model
-
-        # Go back to the main action
-        @trigger 'action:route', 'main'
+      @triggerMethod 'create', modelAttributes
 
     # Set the region to update with the create view
     action.updatedRegions[@views.create.region] = _.wrapView view
@@ -209,14 +174,16 @@ Admin.CrudModule = Admin.Module.extend
   Function called when a `Backbone.Model` has been successfully created
   and synced with the backend.
 
-  The model given will be added to the `CRUD` module `collection`
-
   @param {Backbone.Model} model The model successfully created
   @param {Object} response The response from the backend
   @param {Object} options The options given when the model is created
   ###
   onCreateSuccess: (model, response, options) ->
-    # TODO: Comment the emptyness of the function
+    # Notice the model creation
+    @trigger 'created', model
+
+    # Go back to the main action
+    @trigger 'action:route', 'main'
 
   ###
   Function called when a `Backbone.Model` cannot be created and the
@@ -227,7 +194,7 @@ Admin.CrudModule = Admin.Module.extend
   @param {Object} options The options given when the model is created
   ###
   onCreateError: (model, xhr, options) ->
-    # TODO: Comment the emptyness of the function
+    console.log("Unable to create the model on the backend. Implement the error handler there.")
 
   ###
   Execution of the edition action
@@ -245,12 +212,7 @@ Admin.CrudModule = Admin.Module.extend
     # Listen to the edition of a model from the view
     @listenTo view, 'edit', (modelAttributes) ->
       # Delegates the model edition
-      if @triggerMethod 'edit', view.model, modelAttributes
-        # Notice the model edition
-        @trigger 'edited', view.model
-
-        # Go back to the main action
-        @trigger 'action:route', 'main'
+      @triggerMethod 'edit', view.model, modelAttributes
 
     action.updatedRegions[@views.edit.region] = _.wrapView view
 
@@ -317,7 +279,11 @@ Admin.CrudModule = Admin.Module.extend
   @param {Object} options The options given when the model is edited
   ###
   onEditSuccess: (model, response, options) ->
-    # TODO: Comment the emptyness of the function
+    # Notice the model edition
+    @trigger 'edited', model
+
+    # Go back to the main action
+    @trigger 'action:route', 'main'
 
   ###
   Function called when a `Backbone.Model` cannot be saved and the
@@ -328,7 +294,7 @@ Admin.CrudModule = Admin.Module.extend
   @param {Object} options The options given when the model is edited
   ###
   onEditError: (model, xhr, options) ->
-    # TODO: Comment the emptyness of the function
+    console.log("Unable to update the model on the backend. Implement the error handler there.")
 
   ###
   Execution of the deletion action.
@@ -342,9 +308,7 @@ Admin.CrudModule = Admin.Module.extend
     # Listen to the deletion of a model from the view
     @listenTo view, 'delete', (model) =>
       # Delegates the model deletion
-      if @triggerMethod 'delete', model
-        # Notice the model deletion
-        @trigger 'deleted', model
+      @triggerMethod 'delete', model
 
     # Render the view as it is not part of the normal flow of actions
     view.render()
@@ -398,7 +362,8 @@ Admin.CrudModule = Admin.Module.extend
   @param {Object} options The options given when the model is destroyed
   ###
   onDeleteSuccess: (model, response, options) ->
-    # TODO: Comment the emptyness of the function
+    # Notice the model deletion
+    @trigger 'deleted', model
 
   ###
   Function called when a `Backbone.Model` cannot be removed and the
@@ -409,4 +374,4 @@ Admin.CrudModule = Admin.Module.extend
   @param {Object} options The options given when the model is destroyed
   ###
   onDeleteError: (model, xhr, options) ->
-    # TODO: Comment the emptyness of the function
+    console.log("Unable to delete the model on the backend. Implement the error handler there.")

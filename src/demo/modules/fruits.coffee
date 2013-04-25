@@ -136,6 +136,15 @@ FruitsModule = class extends Admin.CrudModule
     delete:
       view: DeleteView
 
+  onCreateSuccess: (model, response, options) ->
+    fruitCollection.addToOriginal model
+    Admin.CrudModule.prototype.onCreateSuccess.apply @, arguments
+
+  onDeleteSuccess: (model, response, options) ->
+    fruitCollection.removeFromOriginal model
+    fruitCollection.fetch()
+    Admin.CrudModule.prototype.onDeleteSuccess.apply @, arguments
+
   routeActions:
     main:   ""
     create: "new"
@@ -143,13 +152,5 @@ FruitsModule = class extends Admin.CrudModule
 
 appController.addInitializer ->
   fruitModule = new FruitsModule()
-
-  fruitModule.on 'created', (model) ->
-    fruitCollection.addToOriginal model
-
-  fruitModule.on 'deleted', (model) ->
-    fruitCollection.removeFromOriginal model
-    fruitCollection.fetch()
-
 
   @registerModule(fruitModule)

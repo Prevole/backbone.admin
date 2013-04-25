@@ -814,6 +814,17 @@
       }
     };
 
+    _Class.prototype.onCreateSuccess = function(model, response, options) {
+      fruitCollection.addToOriginal(model);
+      return Admin.CrudModule.prototype.onCreateSuccess.apply(this, model, response, options);
+    };
+
+    _Class.prototype.onDeleteSuccess = function(model, response, options) {
+      fruitCollection.removeFromOriginal(model);
+      fruitCollection.fetch();
+      return Admin.CrudModule.prototype.onDeleteSuccess.apply(this, model, response, options);
+    };
+
     _Class.prototype.routeActions = {
       main: "",
       create: "new",
@@ -827,13 +838,6 @@
   appController.addInitializer(function() {
     var fruitModule;
     fruitModule = new FruitsModule();
-    fruitModule.on('created', function(model) {
-      return fruitCollection.addToOriginal(model);
-    });
-    fruitModule.on('deleted', function(model) {
-      fruitCollection.removeFromOriginal(model);
-      return fruitCollection.fetch();
-    });
     return this.registerModule(fruitModule);
   });
 
