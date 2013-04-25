@@ -465,32 +465,6 @@ then the route to reach should not be available anymore. This is the reason why 
     existing and then the `Delete` cannot be called twice. In consequence, the `Delete` action is not expected
     to have an `URL` that we could calle twice. It's more supposed to be handled by a confirmation popup or
     something equivalent.
-    
-    ```
-    # Default options
-    options:
-      deltaPage: 2
-      css:
-        active: "active"
-        disabled: "disabled"
-        page: "page"
-      texts:
-        first: "<<"
-        previous: "<"
-        next: ">"
-        last: ">>"
-        filler: "..."
-      numbers: true
-      firstAndLast: true
-      previousAndNext: true
-    ```
-    
-    - **delatePage**: Number of pages shown before and after the active one (if available)
-    - **css**: Different style added for link `disabled`, `active` or `page`
-    - **texts**: Texts used for each link excepted the page numbers
-    - **numbers**: Enable/Disable page number links
-    - **firstAndLast**: Enable/Disable first and last links
-    - **previousAndNext**: Enable/Disable previous and next links
     */
 
     Admin.CrudModule = Admin.Module.extend({
@@ -674,7 +648,9 @@ then the route to reach should not be available anymore. This is the reason why 
       @param {Object} options The options given when the model is created
       */
 
-      onCreateError: function(model, xhr, options) {},
+      onCreateError: function(model, xhr, options) {
+        return console.log("Unable to create the model on the backend. Implement the error handler there.");
+      },
       /*
       Execution of the edition action
         
@@ -771,7 +747,9 @@ then the route to reach should not be available anymore. This is the reason why 
       @param {Object} options The options given when the model is edited
       */
 
-      onEditError: function(model, xhr, options) {},
+      onEditError: function(model, xhr, options) {
+        return console.log("Unable to update the model on the backend. Implement the error handler there.");
+      },
       /*
       Execution of the deletion action.
         
@@ -848,7 +826,9 @@ then the route to reach should not be available anymore. This is the reason why 
       @param {Object} options The options given when the model is destroyed
       */
 
-      onDeleteError: function(model, xhr, options) {}
+      onDeleteError: function(model, xhr, options) {
+        return console.log("Unable to delete the model on the backend. Implement the error handler there.");
+      }
     });
     Admin.FormView = Backbone.Marionette.ItemView.extend({
       events: {
