@@ -816,13 +816,13 @@
 
     _Class.prototype.onCreateSuccess = function(model, response, options) {
       fruitCollection.addToOriginal(model);
-      return Admin.CrudModule.prototype.onCreateSuccess.apply(this, model, response, options);
+      return Admin.CrudModule.prototype.onCreateSuccess.apply(this, arguments);
     };
 
     _Class.prototype.onDeleteSuccess = function(model, response, options) {
       fruitCollection.removeFromOriginal(model);
       fruitCollection.fetch();
-      return Admin.CrudModule.prototype.onDeleteSuccess.apply(this, model, response, options);
+      return Admin.CrudModule.prototype.onDeleteSuccess.apply(this, arguments);
     };
 
     _Class.prototype.routeActions = {
