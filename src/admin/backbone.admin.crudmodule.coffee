@@ -104,7 +104,7 @@ Admin.CrudModule = Admin.Module.extend
   @return {Admin.Action} The action updated
   ###
   onActionCreate: (action) ->
-    @_createOrEditAction 'create', action, new @collection.model
+    @_createOrEditAction 'create', action, new @collection.model({}, url: @collection.url)
 
   ###
   Execute the model creation from the data retrieved from the create view

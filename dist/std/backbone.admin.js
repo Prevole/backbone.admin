@@ -561,7 +561,9 @@ then the route to reach should not be available anymore. This is the reason why 
       */
 
       onActionCreate: function(action) {
-        return this._createOrEditAction('create', action, new this.collection.model);
+        return this._createOrEditAction('create', action, new this.collection.model({}, {
+          url: this.collection.url
+        }));
       },
       /*
       Execute the model creation from the data retrieved from the create view
