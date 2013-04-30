@@ -11,7 +11,6 @@ FruitModel = class extends DataModel
   regexName: /^[a-zA-Z]+$/
 
   validate: (attrs, options) ->
-    console.log "There"
     unless attrs.name.match @regexName
       return {name: 'The name can contain only lower and upercase letters and must contain at least one letter.'}
 

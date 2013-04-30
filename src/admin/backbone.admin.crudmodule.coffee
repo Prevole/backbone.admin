@@ -99,76 +99,23 @@ Admin.CrudModule = Admin.Module.extend
   ###
   Execution of the create action
 
-  TODO: Complete the documentation with the new additions
-
+  @see The documentation of `_createOrEditAction` function
   @param {Admin.Action} The action to enrich
   @return {Admin.Action} The action updated
   ###
   onActionCreate: (action) ->
-    # Instantiate the create view with an empty model from the collection
-    view = new @views.create.view(model: new @collection.model)
-
-    # Ensure the view is listening for validation errors
-    view.listenTo @, 'create:invalid', view.error if view.error
-
-    # Listen to the creation of the new model from the view
-    @listenTo view, 'create', (modelAttributes) =>
-      # Delegates the model creation
-      @triggerMethod 'create', modelAttributes
-
-    # Set the region to update with the create view
-    action.updatedRegions[@views.create.region] = _.wrapView view
+    @_createOrEditAction 'create', action, new @collection.model
 
   ###
   Execute the model creation from the data retrieved from the create view
 
-  By default, the creation is done through a creation of a new `Backbone.Model`
-  (or sub class) and the call to the `save` function with the attributes given
-  This ensure that the validation of the `Backbone.Model` could be done properly
-  and the potential errors could be handled. The `model` will only be added to the
-  collection if the validation (client and server) is ok. This will be done through
-  the call of `onCreateSuccess`.
-
-  The `Backbone.Model.save` function is called with the `options` enriched
-  by `success(model, response, options)` and `error(model, xhr, options)`. If these
-  options are already provided, they will be overriden.
-
-  To use the `success` and `error` callbacks, you must override the functions
-  `onCreateSuccess` and `onCreateError`. These functions are called in the
-  `success` and `error` function givent to the `save` options.
-
-  To use custom options with the `create` and `isValid` functions, you can
-  define a `hash` or a `function` called `createOptions` on the `CRUD` module.
-
-  The `sync` function from the model is then used to propagate the
-  creation to the backend.
-
-  @param {Object} modelAttributes The model attributes to create the model
-  @return {Backbone.Model} The model created or false
+  @see The documentation of `_saveOrCreate` function
+  @param {Backbone.Model} model The model to create or update
+  @param {Object} modelAttributes The attributes to set to the model
+  @return {Boolean} True if the client validation succeed, failed otherwise
   ###
-  onCreate: (modelAttributes) ->
-    # Create a new model a give the URL from the collection
-    model = new @collection.model(modelAttributes, url: @collection.url)
-
-    # Propagate the model invalid event (for the create a view for example)
-    @listenTo model, 'invalid', (model, error, options) =>
-      @trigger 'create:invalid', model, error, options
-
-    # Retrieve custom options
-    options = _.result(@, 'createOptions') || {}
-
-    # Check if the client side validation is ok
-    if model.isValid options
-      # Force the usage of custom success and error callbacks
-      # that cannot be overriden by the options
-      return model.save null, _.extend(options, {
-        success: (model, response, options) =>
-          @triggerMethod 'create:success', model, response, options
-        error: (model, xhr, options) =>
-          @triggerMethod 'create:error', model, xhr, options
-      })
-    else
-      return false
+  onCreate: (model, modelAttributes) ->
+    @_saveOrCreate 'create', model, modelAttributes
 
   ###
   Function called when a `Backbone.Model` has been successfully created
@@ -199,76 +146,23 @@ Admin.CrudModule = Admin.Module.extend
   ###
   Execution of the edition action
 
+  @see The documentation of `_createOrEditAction` function
   @param {Admin.Action} The action to enrich
   @return {Admin.Action} The action updated
   ###
   onActionEdit: (action) ->
-    # Instantiate the edit view with an existing model from the collection
-    view = new @views.edit.view {model: _.retrieveModel @collection, action}
-
-    # Listen the model to get the validation errors
-    view.listenTo view.model, 'invalid', view.error
-
-    # Listen to the edition of a model from the view
-    @listenTo view, 'edit', (modelAttributes) ->
-      # Delegates the model edition
-      @triggerMethod 'edit', view.model, modelAttributes
-
-    action.updatedRegions[@views.edit.region] = _.wrapView view
+    @_createOrEditAction 'edit', action, _.retrieveModel(@collection, action)
 
   ###
   Execute the model edition from the data retrieved from the edit view
 
-  By default, the edition is done through `Backbone.Model.save` which
-  update and save the model and also run the `sync` function
-  to propagate the edition to the backend.
-
-
-  By default, the edition is done through a call to `Backbone.Model.set` with the
-  attributes given and force the `validate` option to be `true` to ensure the validation
-  is done during the `set` function call. The potential errors could be handled by this
-  process. The `model` will only be saved if the validation (client and server) is ok.
-
-  The `Backbone.Model.save` function is called with the `options` enriched by
-  `success(model, response, options)`, `error(model, xhr, options)` and `validate = false`.
-  If these options are already provided, they will be overriden.
-
-  To use the `success` and `error` callbacks, you must override the functions
-  `onEditSuccess` and `onEditError`. These functions are called in the
-  `success` and `error` function givent to the `save` options.
-
-  The `validate` option set to `false` for the `save` function avoid double
-  validation. Since the validation is already done in the `set` function, it is
-  not necessary to do it twice.
-
-  To use custom options with the `save` and `validate` functions, you can define
-  a `hash` or a `function` called `editOptions` on the `CRUD` module.
-
-  The `sync` function from the model is then used to propagate the
-  edition to the backend.
-
-  @param {Backbone.Model} model The model to update
-  @param {Object} modelAttributes The model attributes to update the model
-  @return {Backbone.Model} The model updated
+  @see The documentation of `_saveOrCreate` function
+  @param {Backbone.Model} model The model to create or update
+  @param {Object} modelAttributes The attributes to set to the model
+  @return {Boolean} True if the client validation succeed, failed otherwise
   ###
   onEdit: (model, modelAttributes) ->
-    # Retrieve custom options and force the validation
-    options = _.extend(_.result(@, 'editOptions') || {}, validate: true)
-
-    # Check if the client side validation is ok when attributes are set
-    if model.set modelAttributes, options
-      # Force the usage of custom success and error callbacks
-      # that cannot be overriden by the options. Also force to not validate
-      # since the validation already occured with the set just done before
-      return model.save null, _.extend(options, {
-        validate: false
-        success: (model, response, options) =>
-          @triggerMethod 'edit:success', model, response, options
-        error: (model, xhr, options) =>
-          @triggerMethod 'edit:error', model, xhr, options
-      })
-    else
-      return false
+    @_saveOrCreate 'edit', model, modelAttributes
 
   ###
   Function called when a `Backbone.Model` has been successfully saved
@@ -375,3 +269,82 @@ Admin.CrudModule = Admin.Module.extend
   ###
   onDeleteError: (model, xhr, options) ->
     console.log("Unable to delete the model on the backend. Implement the error handler there.")
+
+  ###
+  Create or edit action handling. Create the proper view, set the
+  model, add the right listeners to handle the validation errors if
+  any `error` function is defined on the view.
+
+  Also bind the action of creation or edition on the view to trigger
+  the realization of the action (saving the attributes).
+
+  And finally, prepare the region to update.
+
+  @param {String} actionType The action type of the operation
+  @param {Admin.Action} action The action to update
+  @param {Backbone.Model} model The model to handle in the operation
+  @return {Admin.Action} The action updated
+  ###
+  _createOrEditAction: (actionType, action, model) ->
+    # Instantiate the create view with an empty model from the collection
+    view = new @views[actionType].view model: model
+
+    # Ensure the view is listening for validation errors
+    view.listenTo model, "invalid", view.error if view.error
+
+    # Listen to the creation of the new model from the view
+    @listenTo view, actionType, (modelAttributes) =>
+      # Delegates the model creation
+      @triggerMethod actionType, view.model, modelAttributes
+
+    # Set the region to update with the create view
+    action.updatedRegions[@views[actionType].region] = _.wrapView view
+
+  ###
+  Save or create a new model by setting the attributes after they are validated
+
+  By default, the create or update is done through a call to `Backbone.Model.set` with the
+  attributes given and force the `validate` option to be `true` to ensure the validation
+  is done during the `set` function call. The client side validation can be handled by this.
+  The `model` will only be saved if the validation (client and server) is ok.
+
+  The `Backbone.Model.save` function is called with the `options` enriched by
+  `success(model, response, options)`, `error(model, xhr, options)` and `validate = false`.
+  If these options are already provided, they will be overriden.
+
+  To use the `success` and `error` callbacks, you must override the functions
+  `on(Create|Edit)Success` and `on(Create|Edit)Error`. These functions are called in the
+  `success` and `error` function given to the `save` options.
+
+  The `validate` option set to `false` for the `save` function avoid double
+  validation. Since the validation is already done in the `set` function.
+
+  To use custom options with the `save` and `validate` functions, you can define
+  a `hash` or a `function` called `(create|edit)Options` on the `CRUD` module.
+
+  The `sync` function from the model is then used to propagate the creation
+  or edition to the backend.
+
+  @param {String} action The action type of the operation (create or edit)
+  @param {Backbone.Model} model The model to create or update
+  @param {Object} modelAttributes The attributes to set to the model
+  @return {Boolean} True if the client validation succeed, failed otherwise
+  ###
+  _saveOrCreate: (action, model, modelAttributes) ->
+    # Retrieve custom options and force the validation
+    options = _.extend(_.result(@, "#{action}Options") || {}, validate: true)
+
+    # Check if the client side validation is ok when attributes are set
+    if model.set modelAttributes, options
+      # Force the usage of custom success and error callbacks
+      # that cannot be overriden by the options. Also force to not validate
+      # since the validation already occured with the set just done before
+      return model.save null, _.extend(options, {
+        validate: false
+        success: (model, response, options) =>
+          @triggerMethod "#{action}:success", model, response, options
+        error: (model, xhr, options) =>
+          @triggerMethod "#{action}:error", model, xhr, options
+      })
+    else
+      return false

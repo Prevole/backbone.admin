@@ -1,6 +1,6 @@
 /*
- * Backbone.Admin - v0.0.8
- * Copyright (c) 2013-04-25 Laurent Prevost (prevole) <prevole@prevole.ch>
+ * Backbone.Admin - v0.0.9
+ * Copyright (c) 2013-04-30 Laurent Prevost (prevole) <prevole@prevole.ch>
  * Distributed under MIT license
  * https://github.com/prevole/backbone.admin
  */
@@ -555,76 +555,25 @@ then the route to reach should not be available anymore. This is the reason why 
       /*
       Execution of the create action
         
-      TODO: Complete the documentation with the new additions
-        
+      @see The documentation of `_createOrEditAction` function
       @param {Admin.Action} The action to enrich
       @return {Admin.Action} The action updated
       */
 
       onActionCreate: function(action) {
-        var view,
-          _this = this;
-        view = new this.views.create.view({
-          model: new this.collection.model
-        });
-        if (view.error) {
-          view.listenTo(this, 'create:invalid', view.error);
-        }
-        this.listenTo(view, 'create', function(modelAttributes) {
-          return _this.triggerMethod('create', modelAttributes);
-        });
-        return action.updatedRegions[this.views.create.region] = _.wrapView(view);
+        return this._createOrEditAction('create', action, new this.collection.model);
       },
       /*
       Execute the model creation from the data retrieved from the create view
         
-      By default, the creation is done through a creation of a new `Backbone.Model`
-      (or sub class) and the call to the `save` function with the attributes given
-      This ensure that the validation of the `Backbone.Model` could be done properly
-      and the potential errors could be handled. The `model` will only be added to the
-      collection if the validation (client and server) is ok. This will be done through
-      the call of `onCreateSuccess`.
-        
-      The `Backbone.Model.save` function is called with the `options` enriched
-      by `success(model, response, options)` and `error(model, xhr, options)`. If these
-      options are already provided, they will be overriden.
-        
-      To use the `success` and `error` callbacks, you must override the functions
-      `onCreateSuccess` and `onCreateError`. These functions are called in the
-      `success` and `error` function givent to the `save` options.
-        
-      To use custom options with the `create` and `isValid` functions, you can
-      define a `hash` or a `function` called `createOptions` on the `CRUD` module.
-        
-      The `sync` function from the model is then used to propagate the
-      creation to the backend.
-        
-      @param {Object} modelAttributes The model attributes to create the model
-      @return {Backbone.Model} The model created or false
+      @see The documentation of `_saveOrCreate` function
+      @param {Backbone.Model} model The model to create or update
+      @param {Object} modelAttributes The attributes to set to the model
+      @return {Boolean} True if the client validation succeed, failed otherwise
       */
 
-      onCreate: function(modelAttributes) {
-        var model, options,
-          _this = this;
-        model = new this.collection.model(modelAttributes, {
-          url: this.collection.url
-        });
-        this.listenTo(model, 'invalid', function(model, error, options) {
-          return _this.trigger('create:invalid', model, error, options);
-        });
-        options = _.result(this, 'createOptions') || {};
-        if (model.isValid(options)) {
-          return model.save(null, _.extend(options, {
-            success: function(model, response, options) {
-              return _this.triggerMethod('create:success', model, response, options);
-            },
-            error: function(model, xhr, options) {
-              return _this.triggerMethod('create:error', model, xhr, options);
-            }
-          }));
-        } else {
-          return false;
-        }
+      onCreate: function(model, modelAttributes) {
+        return this._saveOrCreate('create', model, modelAttributes);
       },
       /*
       Function called when a `Backbone.Model` has been successfully created
@@ -654,76 +603,25 @@ then the route to reach should not be available anymore. This is the reason why 
       /*
       Execution of the edition action
         
+      @see The documentation of `_createOrEditAction` function
       @param {Admin.Action} The action to enrich
       @return {Admin.Action} The action updated
       */
 
       onActionEdit: function(action) {
-        var view;
-        view = new this.views.edit.view({
-          model: _.retrieveModel(this.collection, action)
-        });
-        view.listenTo(view.model, 'invalid', view.error);
-        this.listenTo(view, 'edit', function(modelAttributes) {
-          return this.triggerMethod('edit', view.model, modelAttributes);
-        });
-        return action.updatedRegions[this.views.edit.region] = _.wrapView(view);
+        return this._createOrEditAction('edit', action, _.retrieveModel(this.collection, action));
       },
       /*
       Execute the model edition from the data retrieved from the edit view
         
-      By default, the edition is done through `Backbone.Model.save` which
-      update and save the model and also run the `sync` function
-      to propagate the edition to the backend.
-        
-        
-      By default, the edition is done through a call to `Backbone.Model.set` with the
-      attributes given and force the `validate` option to be `true` to ensure the validation
-      is done during the `set` function call. The potential errors could be handled by this
-      process. The `model` will only be saved if the validation (client and server) is ok.
-        
-      The `Backbone.Model.save` function is called with the `options` enriched by
-      `success(model, response, options)`, `error(model, xhr, options)` and `validate = false`.
-      If these options are already provided, they will be overriden.
-        
-      To use the `success` and `error` callbacks, you must override the functions
-      `onEditSuccess` and `onEditError`. These functions are called in the
-      `success` and `error` function givent to the `save` options.
-        
-      The `validate` option set to `false` for the `save` function avoid double
-      validation. Since the validation is already done in the `set` function, it is
-      not necessary to do it twice.
-        
-      To use custom options with the `save` and `validate` functions, you can define
-      a `hash` or a `function` called `editOptions` on the `CRUD` module.
-        
-      The `sync` function from the model is then used to propagate the
-      edition to the backend.
-        
-      @param {Backbone.Model} model The model to update
-      @param {Object} modelAttributes The model attributes to update the model
-      @return {Backbone.Model} The model updated
+      @see The documentation of `_saveOrCreate` function
+      @param {Backbone.Model} model The model to create or update
+      @param {Object} modelAttributes The attributes to set to the model
+      @return {Boolean} True if the client validation succeed, failed otherwise
       */
 
       onEdit: function(model, modelAttributes) {
-        var options,
-          _this = this;
-        options = _.extend(_.result(this, 'editOptions') || {}, {
-          validate: true
-        });
-        if (model.set(modelAttributes, options)) {
-          return model.save(null, _.extend(options, {
-            validate: false,
-            success: function(model, response, options) {
-              return _this.triggerMethod('edit:success', model, response, options);
-            },
-            error: function(model, xhr, options) {
-              return _this.triggerMethod('edit:error', model, xhr, options);
-            }
-          }));
-        } else {
-          return false;
-        }
+        return this._saveOrCreate('edit', model, modelAttributes);
       },
       /*
       Function called when a `Backbone.Model` has been successfully saved
@@ -828,6 +726,87 @@ then the route to reach should not be available anymore. This is the reason why 
 
       onDeleteError: function(model, xhr, options) {
         return console.log("Unable to delete the model on the backend. Implement the error handler there.");
+      },
+      /*
+      Create or edit action handling. Create the proper view, set the
+      model, add the right listeners to handle the validation errors if
+      any `error` function is defined on the view.
+        
+      Also bind the action of creation or edition on the view to trigger
+      the realization of the action (saving the attributes).
+        
+      And finally, prepare the region to update.
+        
+      @param {String} actionType The action type of the operation
+      @param {Admin.Action} action The action to update
+      @param {Backbone.Model} model The model to handle in the operation
+      @return {Admin.Action} The action updated
+      */
+
+      _createOrEditAction: function(actionType, action, model) {
+        var view,
+          _this = this;
+        view = new this.views[actionType].view({
+          model: model
+        });
+        if (view.error) {
+          view.listenTo(model, "invalid", view.error);
+        }
+        this.listenTo(view, actionType, function(modelAttributes) {
+          return _this.triggerMethod(actionType, view.model, modelAttributes);
+        });
+        return action.updatedRegions[this.views[actionType].region] = _.wrapView(view);
+      },
+      /*
+      Save or create a new model by setting the attributes after they are validated
+        
+      By default, the create or update is done through a call to `Backbone.Model.set` with the
+      attributes given and force the `validate` option to be `true` to ensure the validation
+      is done during the `set` function call. The client side validation can be handled by this.
+      The `model` will only be saved if the validation (client and server) is ok.
+        
+      The `Backbone.Model.save` function is called with the `options` enriched by
+      `success(model, response, options)`, `error(model, xhr, options)` and `validate = false`.
+      If these options are already provided, they will be overriden.
+        
+      To use the `success` and `error` callbacks, you must override the functions
+      `on(Create|Edit)Success` and `on(Create|Edit)Error`. These functions are called in the
+      `success` and `error` function given to the `save` options.
+        
+      The `validate` option set to `false` for the `save` function avoid double
+      validation. Since the validation is already done in the `set` function.
+        
+      To use custom options with the `save` and `validate` functions, you can define
+      a `hash` or a `function` called `(create|edit)Options` on the `CRUD` module.
+        
+      The `sync` function from the model is then used to propagate the creation
+      or edition to the backend.
+        
+      @param {String} action The action type of the operation (create or edit)
+      @param {Backbone.Model} model The model to create or update
+      @param {Object} modelAttributes The attributes to set to the model
+      @return {Boolean} True if the client validation succeed, failed otherwise
+      */
+
+      _saveOrCreate: function(action, model, modelAttributes) {
+        var options,
+          _this = this;
+        options = _.extend(_.result(this, "" + action + "Options") || {}, {
+          validate: true
+        });
+        if (model.set(modelAttributes, options)) {
+          return model.save(null, _.extend(options, {
+            validate: false,
+            success: function(model, response, options) {
+              return _this.triggerMethod("" + action + ":success", model, response, options);
+            },
+            error: function(model, xhr, options) {
+              return _this.triggerMethod("" + action + ":error", model, xhr, options);
+            }
+          }));
+        } else {
+          return false;
+        }
       }
     });
     Admin.FormView = Backbone.Marionette.ItemView.extend({

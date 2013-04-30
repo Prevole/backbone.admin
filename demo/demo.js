@@ -602,7 +602,6 @@
     _Class.prototype.regexName = /^[a-zA-Z]+$/;
 
     _Class.prototype.validate = function(attrs, options) {
-      console.log("There");
       if (!attrs.name.match(this.regexName)) {
         return {
           name: 'The name can contain only lower and upercase letters and must contain at least one letter.'
