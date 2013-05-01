@@ -1,6 +1,6 @@
 /*
  * Backbone.Admin - v0.0.9
- * Copyright (c) 2013-04-30 Laurent Prevost (prevole) <prevole@prevole.ch>
+ * Copyright (c) 2013-05-01 Laurent Prevost (prevole) <prevole@prevole.ch>
  * Distributed under MIT license
  * https://github.com/prevole/backbone.admin
  */
@@ -52,7 +52,7 @@ then the route to reach should not be available anymore. This is the reason why 
   window.Backbone.Admin = window.Admin = (function(Backbone, Marionette, _, $) {
     var Action, ActionFactory, Admin, authorizator, i18nKeys;
     Admin = {
-      version: "0.0.1"
+      version: "0.0.9"
     };
     authorizator = null;
     _.mixin({

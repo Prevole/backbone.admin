@@ -37,7 +37,7 @@ then the route to reach should not be available anymore. This is the reason why 
 `delete` action.
 ###
 window.Backbone.Admin = window.Admin = ( (Backbone, Marionette, _, $) ->
-  Admin = { version: "0.0.1" }
+  Admin = { version: "0.0.9" }
 
   authorizator = null
 
