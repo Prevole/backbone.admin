@@ -1,6 +1,6 @@
 /*
  * Backbone.Admin - v0.0.9
- * Copyright (c) 2013-05-01 Laurent Prevost (prevole) <prevole@prevole.ch>
+ * Copyright (c) 2013-05-03 Laurent Prevost (prevole) <prevole@prevole.ch>
  * Distributed under MIT license
  * https://github.com/prevole/backbone.admin
  */
@@ -811,22 +811,74 @@ then the route to reach should not be available anymore. This is the reason why 
         }
       }
     });
+    /*
+    ## Admin.FormView
+    
+    Represent the basic form to handle creation and/or edition
+    of a model. Automatically bind events for `create` or `edit`
+    */
+
     Admin.FormView = Backbone.Marionette.ItemView.extend({
       events: {
-        "click .create": "create",
-        "click .edit": "edit"
+        'click .create': 'create',
+        'click .edit': 'edit'
       },
+      /*
+      Enforce a way to retrieve the forms values to set to a model.
+        
+      By default, this function raise an error. You should override
+      this function.
+        
+      @return {Object} The model attributes that a model can use
+      */
+
       modelAttributes: function() {
-        throw new Error("Missing method getAttributes().");
+        throw new Error('Missing method modelAttributes().');
       },
+      /*
+      Handle the create event from the form
+        
+      If an `onBeforeCreate` exists, it will be call. The result should
+      be evaluable as `boolean` expression.
+        
+      @param {Event} event The form event raised to create a model
+      */
+
       create: function(event) {
+        var beforeCreateResult;
         event.preventDefault();
-        return this.trigger("create", this.modelAttributes());
+        beforeCreateResult = this.triggerMethod('before:create', event);
+        if (_.isUndefined(beforeCreateResult) || beforeCreateResult) {
+          return this.trigger('create', this.modelAttributes());
+        }
       },
+      /*
+      Handle the update event from the form
+        
+      @param {Event} event The form event raised to update a model
+      */
+
       edit: function(event) {
+        var beforeEditResult;
         event.preventDefault();
-        return this.trigger("edit", this.modelAttributes());
+        beforeEditResult = this.triggerMethod('before:edit', event);
+        if (_.isUndefined(beforeEditResult) || beforeEditResult) {
+          return this.trigger('edit', this.modelAttributes());
+        }
       },
+      /*
+      Give a way to manage the validation errors from the model
+      to the view.
+        
+      By default, this function does nothing. You can override it
+      if you want to handle the errors properly. They are silently
+      ignored by default.
+        
+      @param {Backbone.Model} model The model that contains error
+      @param {Object} error The validation errors
+      @param {Object} options The options used to sync the creation or edition
+      */
+
       error: function(model, error, options) {}
     });
     Admin.DeleteView = Marionette.ItemView.extend({
