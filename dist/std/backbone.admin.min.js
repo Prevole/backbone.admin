@@ -1,6 +1,6 @@
 /*
  * Backbone.Admin - v0.0.9
- * Copyright (c) 2013-05-03 Laurent Prevost (prevole) <prevole@prevole.ch>
+ * Copyright (c) 2014-01-07 Laurent Prevost (prevole) <prevole@prevole.ch>
  * Distributed under MIT license
  * https://github.com/prevole/backbone.admin
  */
